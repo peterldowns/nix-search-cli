@@ -1,14 +1,29 @@
 # nix-search-cli
 
-A CLI client for the [https://search.nixos.org/packages](`search.nixos.org/packages index`). Use `nix-search` to find packages by name, description, installed programs, or other metadata. Does not work offline.
+A CLI client for the [`search.nixos.org/packages index`](https://search.nixos.org/packages).
+Use `nix-search` to find packages by name, description, installed programs, or other metadata.
+Does not work offline.
 
 ```bash
 # Search for a package
 nix-search <text to match>
+
 # Use a specific channel
 nix-search --channel unstable --query <text to match>
 # Show full usage / help
 nix-search --help
+```
+
+For example, figuring out how to install `gcloud`:
+```shell
+nix-search gcloud
+```
+```
+google-cloud-sdk-gce -> [bq, docker-credential-gcloud, gcloud, gsutil, git-credential-gcloud.sh]
+google-cloud-sdk -> [git-credential-gcloud.sh, docker-credential-gcloud, gcloud, bq, gsutil]
+rPackages.tagcloud
+perl536Packages.HTMLTagCloud
+perl534Packages.HTMLTagCloud
 ```
 
 ## Install
