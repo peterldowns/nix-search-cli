@@ -22,8 +22,8 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       rec {
-        packages = {
-          default = pkgs.buildGoModule {
+        packages = rec {
+          nix-search = pkgs.buildGoModule {
             pname = "nix-search-cli";
             version = "0.0.1";
             license = "MIT";
@@ -72,6 +72,16 @@
             subPackages = [ "cmd/nix-search" ];
           };
         };
+
+        # Makes `nix build` == `nix build .#nix-search`
+        packages.default = packages.nix-search;
+
+        # Makes `nix run .#nix-search` work.
+        apps.nix-search = {
+          type = "app";
+          program = "${packages.nix-search}/bin/nix-search";
+        };
+
         devShells.default = import ./shell.nix { inherit pkgs; };
       }
     );
