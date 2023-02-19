@@ -21,9 +21,19 @@ lint *args:
 
 # build ./cmd/X -> ./bin/X, ./cmd/Y -> ./bin/Y, etc.
 build:
-  #!/usr/bin/env sh
-  # TODO: allow passing in a specific build target through *args
-  for target in $(basename -a ./cmd/*)
-  do
-    go build -o ./bin/${target} ./cmd/${target}
-  done
+  go build -o bin/nix-search ./cmd/nix-search
+
+# builds and pushes peterldowns/nix-search-cli, tagged with :latest and :$COMMIT_SHA
+release:
+  #!/usr/bin/env bash
+  COMMIT_SHA=$(git log -1 | head -1 | cut -f 2 -d ' ')
+  docker buildx build \
+    --platform linux/arm64,linux/amd64 \
+    --label migrate \
+    --tag ghcr.io/peterldowns/nix-search-cli:"$COMMIT_SHA" \
+    --tag ghcr.io/peterldowns/nix-search-cli:latest \
+    --cache-from ghcr.io/peterldowns/nix-search-cli:latest \
+    --build-arg COMMIT_SHA="$COMMIT_SHA" \
+    --output type=image,push=true \
+    --file ./Dockerfile \
+    .

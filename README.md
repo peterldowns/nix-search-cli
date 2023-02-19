@@ -16,9 +16,7 @@ nix-search --help
 
 For example, figuring out how to install `gcloud`:
 ```shell
-nix-search gcloud
-```
-```
+# nix-search gcloud
 google-cloud-sdk-gce -> [bq, docker-credential-gcloud, gcloud, gsutil, git-credential-gcloud.sh]
 google-cloud-sdk -> [git-credential-gcloud.sh, docker-credential-gcloud, gcloud, bq, gsutil]
 rPackages.tagcloud
