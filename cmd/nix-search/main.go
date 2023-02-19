@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	escapes "github.com/snugfox/ansi-escapes"
 	"github.com/spf13/cobra"
 
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
@@ -23,29 +24,35 @@ var rootFlags struct {
 	Channel *string
 }
 
-func rootImpl(_ *cobra.Command, args []string) {
-	var query string
+func rootImpl(c *cobra.Command, args []string) {
+	query := *rootFlags.Query
 	if len(args) != 0 {
-		query = strings.Join(args, " ")
-		if *rootFlags.Query != "" {
-			fmt.Printf("[warning]: arbitrary arguments are being overrideen by --query\n")
-			query = *rootFlags.Query
+		if query != "" {
+			fmt.Printf("[warning]: arbitrary arguments are being ignored due to explicit --query\n")
+		} else {
+			query = strings.Join(args, " ")
 		}
+	}
+	if query == "" {
+		_ = c.Usage()
+		return
 	}
 
 	channel := *rootFlags.Channel
-	fmt.Printf("query = %s\n", query)
-	fmt.Printf("channel = %s\n", channel)
 	results, err := nixsearch.Search(nixsearch.Input{
 		Channel: channel,
 		Query:   query,
 	})
 	if err != nil {
-		panic(fmt.Errorf("failed search: %w\n", err))
+		panic(fmt.Errorf("failed search: %w", err))
 	}
-	fmt.Printf("Found %d results\n", len(results.Derivations))
-	for _, derivation := range results.Derivations {
-		fmt.Println(derivation)
+	for _, pkg := range results.Packages {
+		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, results.Input.Channel, pkg.AttrName)
+		fmt.Printf("%s", escapes.Link(url, pkg.AttrName))
+		if len(pkg.Programs) != 0 {
+			fmt.Printf(" -> [%s]", strings.Join(pkg.Programs, ", "))
+		}
+		fmt.Printf("\n")
 	}
 }
 
