@@ -44,4 +44,4 @@ ARG COMMIT_SHA=null
 ENV COMMIT_SHA=$COMMIT_SHA
 
 COPY --from=builder --chown=app:app /dist /app
-CMD ["/app/nix-search"]
+ENTRYPOINT ["/app/nix-search"]

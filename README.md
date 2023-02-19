@@ -32,6 +32,11 @@ Golang:
 go install github.com/peterldowns/nix-search-cli
 ```
 
+Docker
+```bash
+docker run --rm -it ghcr.io/peterldowns/nix-search-cli
+```
+
 ## Motivation
 Nix is useful as a way to install packages, but without this project there is no easy way to find the attribute name
 to use to install a given program.
