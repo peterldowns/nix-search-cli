@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	escapes "github.com/snugfox/ansi-escapes"
@@ -46,9 +47,15 @@ func rootImpl(c *cobra.Command, args []string) {
 	if err != nil {
 		panic(fmt.Errorf("failed search: %w", err))
 	}
+	// thanks https://rderik.com/blog/identify-if-output-goes-to-the-terminal-or-is-being-redirected-in-golang/
+	o, _ := os.Stdout.Stat()
 	for _, pkg := range results.Packages {
 		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, results.Input.Channel, pkg.AttrName)
-		fmt.Printf("%s", escapes.Link(url, pkg.AttrName))
+		if (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice { // this is a terminal
+			fmt.Printf("%s", escapes.Link(url, pkg.AttrName))
+		} else {
+			fmt.Printf("%s", pkg.AttrName)
+		}
 		if len(pkg.Programs) != 0 {
 			fmt.Printf(" -> [%s]", strings.Join(pkg.Programs, ", "))
 		}
