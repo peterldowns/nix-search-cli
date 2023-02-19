@@ -25,6 +25,8 @@ var rootFlags struct {
 	Channel *string
 }
 
+// TODO: how to embed version?
+
 func rootImpl(c *cobra.Command, args []string) {
 	query := *rootFlags.Query
 	if len(args) != 0 {

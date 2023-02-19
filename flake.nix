@@ -24,8 +24,9 @@
       rec {
         packages = {
           default = pkgs.buildGoModule {
-            pname = "demo";
+            pname = "nix-search-cli";
             version = "0.0.1";
+            license = "MIT";
             # Every time you update your dependencies (go.mod / go.sum)  you'll
             # need to update the vendorSha256.
             #
@@ -39,7 +40,7 @@
             #
             # (Yes, that's really how you're expected to do this.)
             # vendorSha256 = pkgs.lib.fakeSha256;
-            vendorSha256 = "sha256-vanKL5s+szW0hduUXGnJNUlyu8wZ2HsBVklIUb/+DLY=";
+            vendorSha256 = "sha256-q/aTfPgr1pUFfrh/PReAVhCnbIVuOJGVvmPwntgXQvA=";
 
             src =
               let
@@ -68,7 +69,7 @@
             buildInputs = [ ];
 
             # every subpackage will get built with `go build`
-            subPackages = [ "cmd/demo" ];
+            subPackages = [ "cmd/nix-search" ];
           };
         };
         devShells.default = import ./shell.nix { inherit pkgs; };
