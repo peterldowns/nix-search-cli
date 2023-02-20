@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -12,12 +13,12 @@ import (
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
 )
 
-var root = &cobra.Command{
+var rootCommand = &cobra.Command{
 	Use:              "nix-search",
 	Short:            "search for derivations via search.nixos.org",
 	TraverseChildren: true,
 	Args:             cobra.ArbitraryArgs,
-	Run:              rootImpl,
+	Run:              root,
 }
 
 var rootFlags struct {
@@ -25,9 +26,8 @@ var rootFlags struct {
 	Channel *string
 }
 
-// TODO: how to embed version?
-
-func rootImpl(c *cobra.Command, args []string) {
+func root(c *cobra.Command, args []string) {
+	channel := *rootFlags.Channel
 	query := *rootFlags.Query
 	if len(args) != 0 {
 		if query != "" {
@@ -36,24 +36,32 @@ func rootImpl(c *cobra.Command, args []string) {
 			query = strings.Join(args, " ")
 		}
 	}
+
+	// If the user doesn't pass --query and they don't pass any positional
+	// arguments, show the usage and exit since there is no defined search term.
 	if query == "" {
 		_ = c.Usage()
 		return
 	}
 
-	channel := *rootFlags.Channel
-	results, err := nixsearch.Search(nixsearch.Input{
-		Channel: channel,
-		Query:   query,
-	})
+	ctx := context.Background()
+	client, err := nixsearch.NewClient()
+	if err != nil {
+		panic(fmt.Errorf("failed to load search client: %w", err))
+	}
+
+	packages, err := client.Search(ctx, channel, query)
 	if err != nil {
 		panic(fmt.Errorf("failed search: %w", err))
 	}
+
 	// thanks https://rderik.com/blog/identify-if-output-goes-to-the-terminal-or-is-being-redirected-in-golang/
 	o, _ := os.Stdout.Stat()
-	for _, pkg := range results.Packages {
-		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, results.Input.Channel, pkg.AttrName)
-		if (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice { // this is a terminal
+	isTerminal := (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
+
+	for _, pkg := range packages {
+		if isTerminal {
+			url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, channel, pkg.AttrName)
 			fmt.Printf("%s", escapes.Link(url, pkg.AttrName))
 		} else {
 			fmt.Printf("%s", pkg.AttrName)
@@ -67,11 +75,11 @@ func rootImpl(c *cobra.Command, args []string) {
 
 func main() {
 	// Disable the builtin shell-completion script generator command
-	root.CompletionOptions.DisableDefaultCmd = true
-	rootFlags.Query = root.Flags().String("query", "", "the text to search for")
-	rootFlags.Channel = root.Flags().String("channel", "unstable", "which channel to search in")
+	rootCommand.CompletionOptions.DisableDefaultCmd = true
+	rootFlags.Query = rootCommand.Flags().String("query", "", "the text to search for")
+	rootFlags.Channel = rootCommand.Flags().String("channel", "unstable", "which channel to search in")
 
-	if err := root.Execute(); err != nil {
+	if err := rootCommand.Execute(); err != nil {
 		panic(err)
 	}
 }
