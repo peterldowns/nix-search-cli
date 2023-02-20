@@ -1,7 +1,7 @@
 # Build Stage
 # Pin to the latest minor version without specifying a patch version so that
 # we always deploy security fixes as soon as they are available.
-FROM golang:1.19-alpine as builder
+FROM golang:1.18-alpine as builder
 
 # Have to put our source in the right place for it to build
 WORKDIR $GOPATH/src/github.com/peterldowns/nix-search-cli
