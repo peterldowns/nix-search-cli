@@ -44,5 +44,5 @@ type Package struct {
 	Licenses      []struct {
 		FullName string  `json:"fullName"`
 		URL      *string `json:"url"`
-	}
+	} `json:"package_license"`
 }
