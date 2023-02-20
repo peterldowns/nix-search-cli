@@ -41,4 +41,8 @@ jobs:
         extra_nix_config: |
           access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
     - run: nix develop --command nixpkgs-fmt --check *.nix
-    - run: git diff-index --quiet HEAD -- && echo "gomod2nix had changes" && exit 1
+    - run: |
+        if ! git diff-index --quiet HEAD --; then
+          echo "gomod2nix had changes"
+          exit 1
+        fi
