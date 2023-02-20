@@ -27,14 +27,19 @@ perl534Packages.HTMLTagCloud
 ## Install
 
 Golang:
-
 ```bash
 go install github.com/peterldowns/nix-search-cli
+nix-search --help
 ```
 
-Docker
+Docker:
 ```bash
-docker run --rm -it ghcr.io/peterldowns/nix-search-cli
+docker run --rm -it ghcr.io/peterldowns/nix-search-cli:latest --help
+```
+
+Nix (flakes):
+```bash
+nix run github:peterldowns/nix-search-cli --help
 ```
 
 ## Motivation
