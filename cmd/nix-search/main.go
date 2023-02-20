@@ -60,24 +60,21 @@ func root(c *cobra.Command, args []string) {
 	o, _ := os.Stdout.Stat()
 	isTerminal := (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
 
+	var startUnderline string
+	var endUnderline string
 	// tput is used to set underline formatting in the shell. But if it doesn't exist, do nothing
 	_, err = exec.LookPath("tput")
-	hasTput := err != nil
-	if !hasTput {
-		return
+	if err == nil {
+		bytes, _ := exec.Command("tput", "smul").Output()
+		startUnderline = string(bytes)
+		bytes, _ = exec.Command("tput", "rmul").Output()
+		endUnderline = string(bytes)
 	}
 
 	for _, pkg := range packages {
 		if isTerminal {
 			url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, channel, pkg.AttrName)
-			// Ignore errors from formatting commands, they should not crash the tool.
-			if hasTput {
-				_ = exec.Command("tput", "smul").Run()
-			}
-			fmt.Printf("%s", escapes.Link(url, pkg.AttrName))
-			if hasTput {
-				_ = exec.Command("tput", "rmul").Run()
-			}
+			fmt.Printf("%s%s%s", startUnderline, escapes.Link(url, pkg.AttrName), endUnderline)
 		} else {
 			fmt.Printf("%s", pkg.AttrName)
 		}
