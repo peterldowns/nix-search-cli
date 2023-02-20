@@ -120,6 +120,11 @@ nix shell # and then `nix-search`
 nix shell -c nix-search --help # directly run `nix-search` from inside this shell
 ```
 
+### Updating the gomod2nix file
+```bash
+gomod2nix
+```
+
 ### Update the flake.lock:
 ```bash
 # Re-generate the flake.lock file

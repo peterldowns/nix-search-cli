@@ -32,7 +32,7 @@
             nix-search = pkgs.buildGoApplication {
               pname = "nix-search-cli";
               version = "0.0.1";
-              subPackages = [ ./cmd/nix-search ];
+              src = ./.;
               modules = ./gomod2nix.toml;
             };
             # Makes `nix build` == `nix build .#nix-search`
