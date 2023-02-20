@@ -31,12 +31,6 @@ jobs:
     - run: nix run . -- --help
     - run: nix run .#nix-search -- --help
     - run: nix flake check
-  gomod2nix:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - run: nix develop --command gomod2nix
-    - run: git diff-index --quiet HEAD -- && echo "gomod2nix had changes" && exit 1
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -47,3 +41,4 @@ jobs:
         extra_nix_config: |
           access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
     - run: nix develop --command nixpkgs-fmt --check *.nix
+    - run: git diff-index --quiet HEAD -- && echo "gomod2nix had changes" && exit 1
