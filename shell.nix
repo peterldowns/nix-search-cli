@@ -11,6 +11,7 @@ mkShell {
     gotools
     just
     nixpkgs-fmt
+    gomod2nix
   ];
 
   shellHook = ''
