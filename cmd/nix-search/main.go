@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
 	escapes "github.com/snugfox/ansi-escapes"
@@ -28,7 +27,6 @@ var rootFlags struct {
 }
 
 func root(c *cobra.Command, args []string) {
-	fmt.Printf("OS: %s\nArchitecture: %s\n", runtime.GOOS, runtime.GOARCH)
 	channel := *rootFlags.Channel
 	query := *rootFlags.Query
 	if len(args) != 0 {
