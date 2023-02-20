@@ -25,9 +25,10 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            overlays= [ gomod2nix.overlays.default ];
+            overlays = [ gomod2nix.overlays.default ];
           };
-        in rec {
+        in
+        rec {
           packages = rec {
             nix-search = pkgs.buildGoApplication {
               pname = "nix-search-cli";
