@@ -2,7 +2,6 @@
 with pkgs;
 mkShell {
   buildInputs = with pkgs; [
-    air
     delve
     go-outline
     go_1_19

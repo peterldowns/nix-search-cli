@@ -1,6 +1,6 @@
 # nix-search-cli
 
-A CLI client for the [`search.nixos.org/packages index`](https://search.nixos.org/packages).
+`nix-search` is a CLI client for [`search.nixos.org/packages`](https://search.nixos.org/packages).
 Use `nix-search` to find packages by name, description, installed programs, or other metadata.
 Does not work offline.
 
@@ -100,9 +100,9 @@ just lint
 
 ### Building:
 ```bash
-# build with `go build`, result is in `./bin/demo`
+# build with `go build`, result is in `./bin/nix-search`
 just build
-# build with `nix`, result is in `./result/bin/demo`
+# build with `nix`, result is in `./result/bin/nix-search`
 nix build # (flakes)
 nix-build # (standard)
 ```
@@ -110,14 +110,14 @@ nix-build # (standard)
 ### Run the binary:
 ```bash
 # if built with `just build`:
-./bin/demo help
+./bin/nix-search --help
 # if built with `nix build` or `nix-build`:
-./result/bin/demo help
+./result/bin/nix-search --help
 # or, you can build + run directly through nix:
 nix run . -- help # flakes
 # or, you can open a new shell with the binary available on $PATH through nix:
 nix shell # and then `nix-search`
-nix shell -c demo help # directly run `nix-search` from inside this shell
+nix shell -c nix-search --help # directly run `nix-search` from inside this shell
 ```
 
 ### Update the flake.lock:
