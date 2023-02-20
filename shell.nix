@@ -1,10 +1,20 @@
-{ pkgs ? import <nixpkgs> { } }:
-with pkgs;
-mkShell {
-  buildInputs = with pkgs; [
+{ pkgs ? (
+    let
+      inherit (builtins) fetchTree fromJSON readFile;
+      inherit ((fromJSON (readFile ./flake.lock)).nodes) nixpkgs gomod2nix;
+    in
+    import (fetchTree nixpkgs.locked) {
+      overlays = [
+        (import "${fetchTree gomod2nix.locked}/overlay.nix")
+      ];
+    }
+  )
+}:
+pkgs.mkShell {
+  packages = with pkgs; [
     delve
     go-outline
-    go_1_19
+    go_1_18
     golangci-lint
     gopkgs
     gopls
