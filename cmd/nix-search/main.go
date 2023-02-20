@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	escapes "github.com/snugfox/ansi-escapes"
@@ -59,10 +60,24 @@ func root(c *cobra.Command, args []string) {
 	o, _ := os.Stdout.Stat()
 	isTerminal := (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
 
+	// tput is used to set underline formatting in the shell. But if it doesn't exist, do nothing
+	_, err = exec.LookPath("tput")
+	hasTput := err != nil
+	if !hasTput {
+		return
+	}
+
 	for _, pkg := range packages {
 		if isTerminal {
 			url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, channel, pkg.AttrName)
+			// Ignore errors from formatting commands, they should not crash the tool.
+			if hasTput {
+				_ = exec.Command("tput", "smul").Run()
+			}
 			fmt.Printf("%s", escapes.Link(url, pkg.AttrName))
+			if hasTput {
+				_ = exec.Command("tput", "rmul").Run()
+			}
 		} else {
 			fmt.Printf("%s", pkg.AttrName)
 		}
