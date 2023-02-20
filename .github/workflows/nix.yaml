@@ -28,6 +28,7 @@ jobs:
     - run: nix develop --command which go
     - run: nix build . && ./result/bin/nix-search --help
     - run: nix build .#nix-search && ./result/bin/nix-search --help
+    - run: nix run . -- --help
     - run: nix run .#nix-search -- --help
     - run: nix flake check
   lint:
