@@ -28,19 +28,31 @@ perl534Packages.HTMLTagCloud
 
 Golang:
 ```bash
-go install github.com/peterldowns/nix-search-cli
-nix-search --help
+# run it
+go run github.com/peterldowns/nix-search-cli/cmd/nix-search@latest --help
+# install it
+go install github.com/peterldowns/nix-search-cli/cmd/nix-search@latest
 ```
 
 Docker:
 ```bash
+# run it
 docker run --rm -it ghcr.io/peterldowns/nix-search-cli:latest --help
+# pull it
+docker pull ghcr.io/peterldowns/nix-search-cli:latest
 ```
 
 Nix (flakes):
 ```bash
+# run it
 nix run github:peterldowns/nix-search-cli --help
+# build it
+nix build github:peterldowns/nix-search-cli
 ```
+
+Manual:
+- Visit [the latest Github release](https://github.com/peterldowns/nix-search-cli/releases/latest)
+- Download the appropriate binary: `nix-search-$os-$arch`
 
 ## Motivation
 Nix is useful as a way to install packages, but without this project there is no easy way to find the attribute name
