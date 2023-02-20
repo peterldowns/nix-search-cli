@@ -45,7 +45,8 @@ release-binaries:
   GOOS=linux GOARCH=amd64 go build -o ./bin/nix-search-linux-amd64 ./cmd/nix-search
   GOOS=linux GOARCH=arm64 go build -o ./bin/nix-search-linux-arm64 ./cmd/nix-search
   commit_sha="$(git rev-parse --short HEAD)"
-  release_name="release-$commit_sha"
+  timestamp="$(date +%s)"
+  release_name="release-$timestamp-$commit_sha"
   token="$GITHUB_TOKEN"
   upload_url=$(curl -s -H "Authorization: token $token" \
     -X POST \
