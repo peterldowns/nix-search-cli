@@ -46,8 +46,8 @@ Nix (flakes):
 ```bash
 # run it
 nix run github:peterldowns/nix-search-cli --help
-# build it
-nix build github:peterldowns/nix-search-cli
+# install it
+nix profile install github:peterldowns/nix-search-cli --refresh
 ```
 
 Manual:
