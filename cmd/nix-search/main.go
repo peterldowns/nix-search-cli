@@ -88,7 +88,7 @@ func root(c *cobra.Command, args []string) {
 		name := formatPackageName(isTerminal, channel, pkg.AttrName)
 		fmt.Print(name)
 		if len(pkg.Programs) != 0 {
-			programs := formatDependencies(isTerminal, query, pkg.Programs)
+			programs := formatDependencies(isTerminal, input, pkg.Programs)
 			fmt.Print(": ", programs)
 		}
 		fmt.Println()
@@ -145,13 +145,13 @@ func formatPackageName(isTerminal bool, channel, attrName string) string {
 	return attrName
 }
 
-func formatDependencies(isTerminal bool, query string, programs []string) string {
+func formatDependencies(isTerminal bool, input nixsearch.Input, programs []string) string {
 	if isTerminal {
 		var matches []string
 		var others []string
 		// Dim all the programs that aren't what you searched for
 		for _, program := range programs {
-			if isMatch(query, program) {
+			if isMatch(input, program) {
 				matches = append(matches, color.New(color.Bold).Sprint(program))
 			} else {
 				others = append(others, color.New(color.Faint).Sprint(program))
@@ -165,8 +165,11 @@ func formatDependencies(isTerminal bool, query string, programs []string) string
 	return strings.Join(programs, " ")
 }
 
-func isMatch(a, b string) bool {
-	return a == b
+func isMatch(input nixsearch.Input, program string) bool {
+	return (input.Program == program ||
+		input.Advanced == program ||
+		input.Name == program ||
+		input.Default == program)
 }
 
 func main() {

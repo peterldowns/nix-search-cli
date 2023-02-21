@@ -167,10 +167,10 @@ func ProgramQuery(query string) (string, error) {
 	}
 	return fmt.Sprintf(`
 {
-	"match": {
+	"wildcard": {
 		"package_programs": {
-			"fuzziness": 0,
-			"query": %s
+			"case_insensitive": true,
+			"value": %s
 		}
 	}
 }
@@ -198,10 +198,10 @@ func AttrQuery(query string) (string, error) {
 	}
 	return fmt.Sprintf(`
 {
-	"match": {
+	"wildcard": {
 		"package_attr_name": {
-			"fuzziness": 0,
-			"query": %s
+			"case_insensitive": true,
+			"value": %s
 		}
 	}
 }
@@ -248,9 +248,7 @@ func DefaultQuery(query string) (string, error) {
 						"package_description^1.3",
 						"package_description.*^0.78",
 						"package_longDescription^1",
-						"package_longDescription.*^0.6",
-						"flake_name^0.5",
-						"flake_name.*^0.3"
+						"package_longDescription.*^0.6"
 					]
 				}
 			},
