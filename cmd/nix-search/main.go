@@ -25,19 +25,20 @@ var rootCommand = &cobra.Command{
 }
 
 var rootFlags struct {
-	Channel    *string
-	Query      *string
-	Program    *string
-	Name       *string
-	Advanced   *string
-	JSON       *bool
-	Details    *bool
-	MaxResults *int
+	Channel     *string
+	Search      *string
+	Program     *string
+	Attr        *string
+	QueryString *string
+	JSON        *bool
+	Details     *bool
+	MaxResults  *int
+	Version     *string
 }
 
 func root(c *cobra.Command, args []string) {
 	channel := *rootFlags.Channel
-	query := *rootFlags.Query
+	query := *rootFlags.Search
 	if len(args) != 0 {
 		if query != "" {
 			fmt.Printf("[warning]: arbitrary arguments are being ignored due to explicit --query\n")
@@ -49,14 +50,15 @@ func root(c *cobra.Command, args []string) {
 		Channel:    channel,
 		Default:    query,
 		Program:    *rootFlags.Program,
-		Name:       *rootFlags.Name,
-		Advanced:   *rootFlags.Advanced,
+		Name:       *rootFlags.Attr,
+		Advanced:   *rootFlags.QueryString,
 		MaxResults: *rootFlags.MaxResults,
+		Version:    *rootFlags.Version,
 	}
 
 	// If the user doesn't pass --query and they don't pass any positional
 	// arguments, show the usage and exit since there is no defined search term.
-	if input.Default == "" && input.Program == "" && input.Name == "" && input.Advanced == "" {
+	if input.Default == "" && input.Program == "" && input.Name == "" && input.Advanced == "" && input.Version == "" {
 		_ = c.Usage()
 		return
 	}
@@ -87,6 +89,10 @@ func root(c *cobra.Command, args []string) {
 		}
 		name := formatPackageName(isTerminal, channel, pkg.AttrName)
 		fmt.Print(name)
+		if input.Version != "" {
+			vstring := color.New(color.FgGreen, color.Faint).Sprint(pkg.Version)
+			fmt.Print(" ", vstring)
+		}
 		if len(pkg.Programs) != 0 {
 			programs := formatDependencies(isTerminal, input, pkg.Programs)
 			fmt.Print(": ", programs)
@@ -174,14 +180,15 @@ func isMatch(input nixsearch.Input, program string) bool {
 func main() {
 	// Disable the builtin shell-completion script generator command
 	rootCommand.CompletionOptions.DisableDefaultCmd = true
-	rootFlags.Query = rootCommand.Flags().StringP("query", "q", "", "default fuzzy search")
+	rootFlags.Search = rootCommand.Flags().StringP("search", "s", "", "default search, same as the website")
 	rootFlags.Channel = rootCommand.Flags().StringP("channel", "c", "unstable", "which channel to search in")
 	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
-	rootFlags.Name = rootCommand.Flags().StringP("name", "n", "", "search by attr name")
-	rootFlags.Advanced = rootCommand.Flags().StringP("advanced", "a", "", "perform an advanced query string format search")
+	rootFlags.Attr = rootCommand.Flags().StringP("attr", "a", "", "search by attr name")
+	rootFlags.QueryString = rootCommand.Flags().StringP("query-string", "q", "", "perform an advanced query string format search")
 	rootFlags.JSON = rootCommand.Flags().BoolP("json", "j", false, "emit results in json-line format")
 	rootFlags.Details = rootCommand.Flags().BoolP("details", "d", false, "show expanded details for each result")
-	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 50, "maximum number of results to return")
+	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 20, "maximum number of results to return")
+	rootFlags.Version = rootCommand.Flags().StringP("version", "v", "", "search by version")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)

@@ -33,6 +33,7 @@ type Input struct {
 	Advanced   string
 	Name       string
 	MaxResults int
+	Version    string
 }
 
 func (c Client) Search(ctx context.Context, input Input) ([]Package, error) {
@@ -56,6 +57,7 @@ func (c Client) Search(ctx context.Context, input Input) ([]Package, error) {
 func buildRequest(ctx context.Context, input Input) (*http.Request, error) {
 	url := formatURL(input.Channel)
 	payload, err := formatQuery(input)
+	// fmt.Println(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +126,13 @@ func formatQuery(input Input) (string, error) {
 		}
 		queries = append(queries, q)
 	}
+	if input.Version != "" {
+		q, err := VersionQuery(input.Version)
+		if err != nil {
+			return "", err
+		}
+		queries = append(queries, q)
+	}
 	query := strings.Join(queries, ", ")
 	return fmt.Sprintf(payloadTemplate, input.MaxResults, query), nil
 }
@@ -155,21 +164,58 @@ const (
 `
 )
 
-func ProgramQuery(query string) (string, error) {
-	encQuery, err := json.Marshal(query)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf(`
+func VersionQuery(version string) (string, error) {
+	wildcard, _ := json.Marshal(version + "*")
+	encVersion, _ := json.Marshal(version)
+	x := fmt.Sprintf(`
 {
-	"wildcard": {
-		"package_programs": {
-			"case_insensitive": true,
-			"value": %s
-		}
+	"dis_max": {
+		"tie_breaker": 0.7,
+		"queries": [
+			{
+				"wildcard": {
+					"package_pversion": {
+						"value": %s
+					}
+				}
+			},
+			{
+				"match": {
+					"package_pversion": %s
+				}
+			}
+		]
 	}
 }
-	`, encQuery), nil
+	`, wildcard, encVersion)
+	return x, nil
+}
+
+func ProgramQuery(query string) (string, error) {
+	wildcard, _ := json.Marshal(query + "*")
+	encQuery, _ := json.Marshal(query)
+	x := fmt.Sprintf(`
+{
+	"dis_max": {
+		"tie_breaker": 0.7,
+		"queries": [
+			{
+				"wildcard": {
+					"package_programs": {
+						"value": %s
+					}
+				}
+			},
+			{
+				"match": {
+					"package_programs": %s
+				}
+			}
+		]
+	}
+}
+	`, wildcard, encQuery)
+	return x, nil
 }
 
 func AdvancedQuery(query string) (string, error) {
@@ -187,44 +233,39 @@ func AdvancedQuery(query string) (string, error) {
 }
 
 func AttrQuery(query string) (string, error) {
-	encQuery, err := json.Marshal(query)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf(`
-{
-	"wildcard": {
-		"package_attr_name": {
-			"case_insensitive": true,
-			"value": %s
-		}
-	}
-}
-	`, encQuery), nil
-}
-
-func DefaultQuery(query string) (string, error) {
-	matchName := "multi_match_" + strings.ReplaceAll(query, " ", "_")
-	value := fmt.Sprintf("*%s*", query)
-
-	encQuery, err := json.Marshal(query)
-	if err != nil {
-		return "", err
-	}
-	encMatchName, err := json.Marshal(matchName)
-	if err != nil {
-		return "", err
-	}
-	encValue, err := json.Marshal(value)
-	if err != nil {
-		return "", err
-	}
-
-	tpl := `
+	wildcard, _ := json.Marshal(query + "*")
+	encQuery, _ := json.Marshal(query)
+	x := fmt.Sprintf(`
 {
 	"dis_max": {
 		"tie_breaker": 0.7,
 		"queries": [
+			{
+				"wildcard": {
+					"package_attr_name": {
+						"value": %s
+					}
+				}
+			},
+			{
+				"match": {
+					"package_attr_name": %s
+				}
+			}
+		]
+	}
+}
+	`, wildcard, encQuery)
+	return x, nil
+}
+
+func DefaultQuery(query string) (string, error) {
+	matchName := "multi_match_" + strings.ReplaceAll(query, " ", "_")
+	encQuery, _ := json.Marshal(query)
+	encMatchName, _ := json.Marshal(matchName)
+
+	var queries []string
+	multiMatch := fmt.Sprintf(`
 			{
 				"multi_match": {
 					"type": "cross_fields",
@@ -246,7 +287,12 @@ func DefaultQuery(query string) (string, error) {
 						"package_longDescription.*^0.6"
 					]
 				}
-			},
+			}
+			`, encQuery, encMatchName)
+	queries = append(queries, multiMatch)
+	for _, term := range strings.Split(query, " ") {
+		enc, _ := json.Marshal("*" + term + "*")
+		wildcard := fmt.Sprintf(`
 			{
 				"wildcard": {
 					"package_attr_name": {
@@ -255,9 +301,16 @@ func DefaultQuery(query string) (string, error) {
 					}
 				}
 			}
-		]
+		`, enc)
+		queries = append(queries, wildcard)
+	}
+	tpl := `
+{
+	"dis_max": {
+		"tie_breaker": 0.7,
+		"queries": [%s]
 	}
 }
 `
-	return fmt.Sprintf(tpl, encQuery, encMatchName, encValue), nil
+	return fmt.Sprintf(tpl, strings.Join(queries, ", ")), nil
 }
