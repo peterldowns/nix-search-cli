@@ -154,12 +154,6 @@ const (
 `
 )
 
-/*
-nix-search this is the default query works just like the website
-nix-search -q this is the default query works just like the website
-nix-search --program gcloud # substring match on program entry
-nix-search --attr  name # substring match on attribute name
-*/
 func ProgramQuery(query string) (string, error) {
 	encQuery, err := json.Marshal(query)
 	if err != nil {

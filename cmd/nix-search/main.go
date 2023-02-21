@@ -31,6 +31,7 @@ var rootFlags struct {
 	Name     *string
 	Advanced *string
 	JSON     *bool
+	Details  *bool
 }
 
 func root(c *cobra.Command, args []string) {
@@ -73,10 +74,7 @@ func root(c *cobra.Command, args []string) {
 	o, _ := os.Stdout.Stat()
 	isTerminal := (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
 
-	showVersion := true
-	showDescription := true
-	showLicenses := true
-	showHomepage := true
+	showDetails := *rootFlags.Details
 
 	for _, pkg := range packages {
 		// If asked to spit out json, just dump the packages directly
@@ -92,45 +90,44 @@ func root(c *cobra.Command, args []string) {
 			fmt.Print(": ", programs)
 		}
 		fmt.Println()
-		if showVersion {
-			fmt.Printf("  version: %s\n", pkg.Version)
+		if !showDetails {
+			continue
 		}
-		if showDescription {
-			d := ""
-			if pkg.Description != nil {
-				d = *pkg.Description
+		// version
+		fmt.Printf("  version: %s\n", pkg.Version)
+		// description
+		d := ""
+		if pkg.Description != nil {
+			d = *pkg.Description
+		}
+		fmt.Printf("  description: %s\n", d)
+		// license
+		fmt.Printf("  license:")
+		if len(pkg.Licenses) == 1 {
+			license := pkg.Licenses[0]
+			txt := license.FullName
+			if isTerminal && license.URL != nil {
+				txt = escapes.Link(*license.URL, license.FullName)
 			}
-			fmt.Printf("  description: %s\n", d)
-		}
-		if showLicenses {
-			fmt.Printf("  license:")
-			if len(pkg.Licenses) == 1 {
-				license := pkg.Licenses[0]
+			fmt.Printf(" %s\n", txt)
+		} else {
+			fmt.Printf("\n")
+			for _, license := range pkg.Licenses {
 				txt := license.FullName
 				if isTerminal && license.URL != nil {
 					txt = escapes.Link(*license.URL, license.FullName)
 				}
-				fmt.Printf(" %s\n", txt)
-			} else {
-				fmt.Printf("\n")
-				for _, license := range pkg.Licenses {
-					txt := license.FullName
-					if isTerminal && license.URL != nil {
-						txt = escapes.Link(*license.URL, license.FullName)
-					}
-					fmt.Printf("    - %s\n", txt)
-				}
+				fmt.Printf("    - %s\n", txt)
 			}
 		}
-		if showHomepage {
-			fmt.Printf("  homepage:")
-			if len(pkg.Homepage) == 1 {
-				fmt.Printf(" %s\n", pkg.Homepage[0])
-			} else {
-				fmt.Printf("\n")
-				for _, homepage := range pkg.Homepage {
-					fmt.Printf("    - %s\n", homepage)
-				}
+		// homepage
+		fmt.Printf("  homepage:")
+		if len(pkg.Homepage) == 1 {
+			fmt.Printf(" %s\n", pkg.Homepage[0])
+		} else {
+			fmt.Printf("\n")
+			for _, homepage := range pkg.Homepage {
+				fmt.Printf("    - %s\n", homepage)
 			}
 		}
 	}
@@ -181,6 +178,7 @@ func main() {
 	rootFlags.Name = rootCommand.Flags().StringP("name", "n", "", "search by attr name")
 	rootFlags.Advanced = rootCommand.Flags().StringP("advanced", "a", "", "perform an advanced query string format search")
 	rootFlags.JSON = rootCommand.Flags().BoolP("json", "j", false, "emit results in json-line format")
+	rootFlags.Details = rootCommand.Flags().BoolP("details", "d", false, "show expanded details for each result")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)
