@@ -19,9 +19,8 @@ test *args='./...':
 lint *args:
   golangci-lint run --fix --config .golangci.yaml "$@"
 
-# build ./cmd/X -> ./bin/X, ./cmd/Y -> ./bin/Y, etc.
 build:
-  go build -o bin/nix-search ./cmd/nix-search
+  go build -o bin/nix-search .
 
 # builds and pushes peterldowns/nix-search-cli, tagged with :latest and :$COMMIT_SHA
 release-container:
@@ -40,10 +39,10 @@ release-container:
 
 release-binaries:
   #!/usr/bin/env bash
-  GOOS=darwin GOARCH=amd64 go build -o ./bin/nix-search-darwin-amd64 ./cmd/nix-search
-  GOOS=darwin GOARCH=arm64 go build -o ./bin/nix-search-darwin-arm64 ./cmd/nix-search
-  GOOS=linux GOARCH=amd64 go build -o ./bin/nix-search-linux-amd64 ./cmd/nix-search
-  GOOS=linux GOARCH=arm64 go build -o ./bin/nix-search-linux-arm64 ./cmd/nix-search
+  GOOS=darwin GOARCH=amd64 go build -o ./bin/nix-search-darwin-amd64 .
+  GOOS=darwin GOARCH=arm64 go build -o ./bin/nix-search-darwin-arm64 .
+  GOOS=linux GOARCH=amd64 go build -o ./bin/nix-search-linux-amd64 .
+  GOOS=linux GOARCH=arm64 go build -o ./bin/nix-search-linux-arm64 .
   commit_sha="$(git rev-parse --short HEAD)"
   timestamp="$(date +%s)"
   release_name="release-$timestamp-$commit_sha"

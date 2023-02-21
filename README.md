@@ -50,7 +50,7 @@ Flags:
   -v, --version string        search by version
 ```
 
-For example, here's how you would find all packages that install a `gcloud` binary. The results show the version ofe ach package as well as the full set of installed binaries. In a supported terminal, we use nice colors:
+For example, here's how you would find all packages that install a `gcloud` binary. The results show the version of each package as well as the full set of installed binaries. In a supported terminal, we use nice colors:
 
 ```console
 $ ./bin/nix-search -p gcloud
@@ -70,9 +70,9 @@ python312 @ 3.12.0a5: python 2to3 2to3-3.12 idle idle3 idle3.12 pydoc pydoc3 pyd
 Golang:
 ```bash
 # run it
-go run github.com/peterldowns/nix-search-cli/cmd/nix-search@latest --help
+go run github.com/peterldowns/nix-search-cli@latest --help
 # install it
-go install github.com/peterldowns/nix-search-cli/cmd/nix-search@latest
+go install github.com/peterldowns/nix-search-cli@latest
 ```
 
 Docker:
