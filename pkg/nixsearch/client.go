@@ -27,11 +27,12 @@ func NewClient() (*Client, error) {
 }
 
 type Input struct {
-	Channel  string
-	Default  string
-	Program  string
-	Advanced string
-	Name     string
+	Channel    string
+	Default    string
+	Program    string
+	Advanced   string
+	Name       string
+	MaxResults int
 }
 
 func (c Client) Search(ctx context.Context, input Input) ([]Package, error) {
@@ -124,7 +125,7 @@ func formatQuery(input Input) (string, error) {
 		queries = append(queries, q)
 	}
 	query := strings.Join(queries, ", ")
-	return fmt.Sprintf(payloadTemplate, query), nil
+	return fmt.Sprintf(payloadTemplate, input.MaxResults, query), nil
 }
 
 const (
@@ -135,7 +136,7 @@ const (
 	payloadTemplate = `
 {
 	"from": 0,
-	"size": 50,
+	"size": %d,
 	"sort": [
 		{
 		"_score": "desc",

@@ -25,13 +25,14 @@ var rootCommand = &cobra.Command{
 }
 
 var rootFlags struct {
-	Channel  *string
-	Query    *string
-	Program  *string
-	Name     *string
-	Advanced *string
-	JSON     *bool
-	Details  *bool
+	Channel    *string
+	Query      *string
+	Program    *string
+	Name       *string
+	Advanced   *string
+	JSON       *bool
+	Details    *bool
+	MaxResults *int
 }
 
 func root(c *cobra.Command, args []string) {
@@ -45,11 +46,12 @@ func root(c *cobra.Command, args []string) {
 		}
 	}
 	input := nixsearch.Input{
-		Channel:  channel,
-		Default:  query,
-		Program:  *rootFlags.Program,
-		Name:     *rootFlags.Name,
-		Advanced: *rootFlags.Advanced,
+		Channel:    channel,
+		Default:    query,
+		Program:    *rootFlags.Program,
+		Name:       *rootFlags.Name,
+		Advanced:   *rootFlags.Advanced,
+		MaxResults: *rootFlags.MaxResults,
 	}
 
 	// If the user doesn't pass --query and they don't pass any positional
@@ -179,6 +181,7 @@ func main() {
 	rootFlags.Advanced = rootCommand.Flags().StringP("advanced", "a", "", "perform an advanced query string format search")
 	rootFlags.JSON = rootCommand.Flags().BoolP("json", "j", false, "emit results in json-line format")
 	rootFlags.Details = rootCommand.Flags().BoolP("details", "d", false, "show expanded details for each result")
+	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 50, "maximum number of results to return")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)
