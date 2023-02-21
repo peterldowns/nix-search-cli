@@ -1,0 +1,22 @@
+{
+  "name": "default-nix",
+  "build": {
+    "dockerfile": "Dockerfile",
+  },
+  "overrideCommand": false,
+  "remoteUser": "vscode",
+  "updateContentCommand": "update-content.sh nix-search-cli",
+  "postStartCommand": "update-content.sh nix-search-cli",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+              "path": "/bin/zsh",
+          },
+        },
+      },
+    },
+  },
+}

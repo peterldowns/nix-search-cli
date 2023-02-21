@@ -48,7 +48,7 @@
           devShells = rec {
             default = pkgs.mkShell {
               packages = with pkgs; [
-                # golang
+                ## golang
                 delve
                 go-outline
                 go
@@ -56,19 +56,21 @@
                 gopkgs
                 gopls
                 gotools
-                # nix
+                ## nix
                 pkgs.gomod2nix # have to use pkgs. prefix or it breaks lorri
-                rnix-lsp
+                #rnix-lsp
                 nixpkgs-fmt
-                # other tools
+                ## other tools
                 just
               ];
 
               shellHook = ''
                 # The path to this repository
-                shell_nix="''${IN_LORRI_SHELL:-$(pwd)/shell.nix}"
-                workspace_root=$(dirname "$shell_nix")
-                export WORKSPACE_ROOT="$workspace_root"
+                if [ -z $WORKSPACE_ROOT ]; then
+                  shell_nix="''${IN_LORRI_SHELL:-$(pwd)/shell.nix}"
+                  workspace_root=$(dirname "$shell_nix")
+                  export WORKSPACE_ROOT="$workspace_root"
+                fi
 
                 # We put the $GOPATH/$GOCACHE/$GOENV in $TOOLCHAIN_ROOT,
                 # and ensure that the GOPATH's bin dir is on our PATH so tools
@@ -76,7 +78,7 @@
                 #
                 # Any tools installed explicitly with `go install` will take precedence
                 # over versions installed by Nix due to the ordering here.
-                export TOOLCHAIN_ROOT="$workspace_root/.toolchain"
+                export TOOLCHAIN_ROOT="$WORKSPACE_ROOT/.toolchain"
                 export GOROOT=
                 export GOCACHE="$TOOLCHAIN_ROOT/go/cache"
                 export GOENV="$TOOLCHAIN_ROOT/go/env"
