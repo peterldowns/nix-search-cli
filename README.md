@@ -1,27 +1,68 @@
 # nix-search-cli
 
 `nix-search` is a CLI client for [`search.nixos.org/packages`](https://search.nixos.org/packages).
-Use `nix-search` to find packages by name, description, installed programs, or other metadata.
-Does not work offline.
+Use `nix-search` to find packages by name, description, installed programs, version, or other metadata. Requires an active internet connection to work.
 
-```bash
-# Search for a package
-nix-search <text to match>
+Major features and benefits:
+* Find how to install the binary you need
+* Searches work the same as the web interface by default
+* Use flags to explicitly query attribute names, installed programs, and versions
+* Each result is linked to the web interface (in supported terminals)
+* Results are compact and nicely colorized by default (in supported terminals)
 
-# Use a specific channel
-nix-search --channel unstable --query <text to match>
-# Show full usage / help
-nix-search --help
+```console
+$ nix-search --help
+search for packages via search.nixos.org
+
+Usage:
+  nix-search ...query [flags]
+
+Examples:
+  # Search
+  # ... like the web interface
+  nix-search python linter
+  nix-search --search "python linter"
+  # ... by attr name
+  nix-search --attr python
+  nix-search --attr 'emacsPackages.*'
+  # ... by version
+  nix-search --version 1.20
+  nix-search --version '1.*'
+  # ... by installed programs
+  nix-search --program python
+  nix-search --program "py*"
+  # ... with ElasticSearch QueryString syntax
+  nix-search --query-string="package_programs:(crystal OR irb)"
+  nix-search --query-string='package_description:(MIT Scheme)'
+  # ... with multiple filters and options
+  nix-search --attr go --version 1.20 --details
+
+Flags:
+  -a, --attr string           search by attr name
+  -c, --channel string        which channel to search in (default "unstable")
+  -d, --details               show expanded details for each result
+  -h, --help                  help for nix-search
+  -j, --json                  emit results in json-line format
+  -m, --max-results int       maximum number of results to return (default 20)
+  -p, --program string        search by installed programs
+  -q, --query-string string   perform an advanced query string format search
+  -s, --search string         default search, same as the website
+  -v, --version string        search by version
 ```
 
-For example, figuring out how to install `gcloud`:
-```shell
-# nix-search gcloud
-google-cloud-sdk-gce -> [bq, docker-credential-gcloud, gcloud, gsutil, git-credential-gcloud.sh]
-google-cloud-sdk -> [git-credential-gcloud.sh, docker-credential-gcloud, gcloud, bq, gsutil]
-rPackages.tagcloud
-perl536Packages.HTMLTagCloud
-perl534Packages.HTMLTagCloud
+For example, here's how you would find all packages that install a `gcloud` binary. The results show the version ofe ach package as well as the full set of installed binaries. In a supported terminal, we use nice colors:
+
+```console
+$ ./bin/nix-search -p gcloud
+google-cloud-sdk-gce @ 408.0.1: gcloud bq docker-credential-gcloud git-credential-gcloud.sh gsutil
+google-cloud-sdk @ 408.0.1: gcloud bq docker-credential-gcloud git-credential-gcloud.sh gsutil
+```
+
+Here's how you would find out how to install python 3.12:
+
+```console
+$ ./bin/nix-search -p python -v 3.12
+python312 @ 3.12.0a5: python 2to3 2to3-3.12 idle idle3 idle3.12 pydoc pydoc3 pydoc3.12 python-config python3 python3-config python3.12 python3.12-config
 ```
 
 ## Install
@@ -133,6 +174,8 @@ nix shell -c nix-search --help # directly run `nix-search` from inside this shel
 ```
 
 ### Updating the gomod2nix file
+If you make changes that modify the golang dependencies, you'll need to update the pinned dependencies used in the Nix build process:
+
 ```bash
 gomod2nix
 ```
