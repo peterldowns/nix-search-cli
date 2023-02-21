@@ -50,6 +50,10 @@ nix-search --program "py*"
 # ... with ElasticSearch QueryString syntax
 nix-search --query-string="package_programs:(crystal OR irb)"
 nix-search --query-string='package_description:(MIT Scheme)'
+# ... on a specific channel
+nix-search --channel=unstable python3
+# ... or flakes
+nix-search --flakes wayland
 # ... with multiple filters and options
 nix-search --attr go --version 1.20 --details
 	`),
@@ -58,8 +62,19 @@ nix-search --attr go --version 1.20 --details
 	Run:              root,
 }
 
+func firstOf(s ...string) string {
+	for _, x := range s {
+		x = strings.TrimSpace(x)
+		if x != "" {
+			return x
+		}
+	}
+	return ""
+}
+
 var rootFlags struct {
 	Channel     *string
+	Flakes      *bool
 	Search      *string
 	Program     *string
 	Attr        *string
@@ -82,6 +97,7 @@ func root(c *cobra.Command, args []string) {
 	}
 	input := nixsearch.Input{
 		Channel:    channel,
+		Flakes:     *rootFlags.Flakes,
 		Default:    query,
 		Program:    *rootFlags.Program,
 		Name:       *rootFlags.Attr,
@@ -121,7 +137,7 @@ func root(c *cobra.Command, args []string) {
 			fmt.Println(string(line))
 			continue
 		}
-		name := formatPackageName(isTerminal, channel, pkg.AttrName)
+		name := formatPackageName(isTerminal, input, pkg)
 		fmt.Print(name)
 		if !showDetails {
 			vstring := color.New(color.FgGreen, color.Faint).Sprintf("@ %s", pkg.Version)
@@ -139,26 +155,23 @@ func root(c *cobra.Command, args []string) {
 		// programs
 		fmt.Printf("  programs: %s\n", formatDependencies(isTerminal, input, pkg.Programs))
 		// description
-		d := ""
-		if pkg.Description != nil {
-			d = *pkg.Description
-		}
+		d := firstOf(pkg.FlakeDescription, pkg.Description)
 		fmt.Printf("  description: %s\n", d)
 		// license
 		fmt.Printf("  license:")
 		if len(pkg.Licenses) == 1 {
 			license := pkg.Licenses[0]
 			txt := license.FullName
-			if isTerminal && license.URL != nil {
-				txt = escapes.Link(*license.URL, license.FullName)
+			if isTerminal && license.URL != "" {
+				txt = escapes.Link(license.URL, license.FullName)
 			}
 			fmt.Printf(" %s\n", txt)
 		} else {
 			fmt.Printf("\n")
 			for _, license := range pkg.Licenses {
 				txt := license.FullName
-				if isTerminal && license.URL != nil {
-					txt = escapes.Link(*license.URL, license.FullName)
+				if isTerminal && license.URL != "" {
+					txt = escapes.Link(license.URL, license.FullName)
 				}
 				fmt.Printf("    - %s\n", txt)
 			}
@@ -176,13 +189,35 @@ func root(c *cobra.Command, args []string) {
 	}
 }
 
-func formatPackageName(isTerminal bool, channel, attrName string) string {
-	if isTerminal {
-		c := color.New(color.Underline, color.FgBlue)
-		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, channel, attrName)
-		return escapes.Link(url, c.Sprint(attrName))
+func formatPackageName(isTerminal bool, input nixsearch.Input, pkg nixsearch.Package) string {
+	c := color.New(color.Underline, color.FgBlue)
+	if input.Flakes {
+		var name string
+		switch pkg.FlakeResolved.Type {
+		case "github":
+			name = c.Sprintf(
+				"%s:%s/%s#%s",
+				pkg.FlakeResolved.Type,
+				pkg.FlakeResolved.Owner,
+				pkg.FlakeResolved.Repo,
+				pkg.AttrName,
+			)
+		case "git":
+			name = c.Sprintf("%s#%s", pkg.FlakeResolved.URL, pkg.AttrName)
+		default:
+			name = "unknown:" + pkg.FlakeName
+		}
+		if isTerminal {
+			url := fmt.Sprintf(`https://search.nixos.org/flakes?show=%s&query=%s`, pkg.AttrName, pkg.AttrName)
+			return escapes.Link(url, name)
+		}
+		return name
 	}
-	return attrName
+	if isTerminal {
+		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, input.Channel, pkg.AttrName)
+		return escapes.Link(url, c.Sprint(pkg.AttrName))
+	}
+	return pkg.AttrName
 }
 
 func formatDependencies(isTerminal bool, input nixsearch.Input, programs []string) string {
@@ -224,6 +259,7 @@ func main() {
 	rootFlags.Details = rootCommand.Flags().BoolP("details", "d", false, "show expanded details for each result")
 	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 20, "maximum number of results to return")
 	rootFlags.Version = rootCommand.Flags().StringP("version", "v", "", "search by version")
+	rootFlags.Flakes = rootCommand.Flags().BoolP("flakes", "f", false, "search flakes instead of nixpkgs")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)

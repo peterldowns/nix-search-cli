@@ -28,6 +28,7 @@ func NewClient() (*Client, error) {
 
 type Input struct {
 	Channel    string
+	Flakes     bool
 	Default    string
 	Program    string
 	Advanced   string
@@ -55,7 +56,7 @@ func (c Client) Search(ctx context.Context, input Input) ([]Package, error) {
 }
 
 func buildRequest(ctx context.Context, input Input) (*http.Request, error) {
-	url := formatURL(input.Channel)
+	url := formatURL(input)
 	payload, err := formatQuery(input)
 	// fmt.Println(payload)
 	if err != nil {
@@ -92,8 +93,11 @@ func parseResponse(resp *http.Response) ([]Package, error) {
 	return packages, nil
 }
 
-func formatURL(channel string) string {
-	return fmt.Sprintf(urlTemplate, url.QueryEscape(channel))
+func formatURL(input Input) string {
+	if input.Flakes {
+		return fmt.Sprintf(urlTemplate, "group-manual")
+	}
+	return fmt.Sprintf(urlTemplate, url.QueryEscape("nixos-"+input.Channel))
 }
 
 func formatQuery(input Input) (string, error) {
@@ -141,7 +145,7 @@ const (
 	// https://github.com/NixOS/nixos-search/blob/main/frontend/src/index.js
 	defaultUsername = "aWVSALXpZv"
 	defaultPassword = "X8gPHnzL52wFEekuxsfQ9cSh"
-	urlTemplate     = `https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/latest-37-nixos-%s/_search`
+	urlTemplate     = `https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/latest-37-%s/_search`
 	payloadTemplate = `
 {
 	"from": 0,
@@ -286,7 +290,10 @@ func DefaultQuery(query string) (string, error) {
 						"package_pversion^1.3",
 						"package_pversion.*^0.78",
 						"package_longDescription^1",
-						"package_longDescription.*^0.6"
+						"package_longDescription.*^0.6",
+						"flake_name^0.5",
+						"flake_name.*^0.3",
+						"flake_resolved.*^99"
 					]
 				}
 			}

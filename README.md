@@ -34,6 +34,10 @@ Examples:
   # ... with ElasticSearch QueryString syntax
   nix-search --query-string="package_programs:(crystal OR irb)"
   nix-search --query-string='package_description:(MIT Scheme)'
+  # ... on a specific channel
+  nix-search --channel=unstable python3
+  # ... or flakes
+  nix-search --flakes wayland
   # ... with multiple filters and options
   nix-search --attr go --version 1.20 --details
 
@@ -41,6 +45,7 @@ Flags:
   -a, --attr string           search by attr name
   -c, --channel string        which channel to search in (default "unstable")
   -d, --details               show expanded details for each result
+  -f, --flakes                search flakes instead of nixpkgs
   -h, --help                  help for nix-search
   -j, --json                  emit results in json-line format
   -m, --max-results int       maximum number of results to return (default 20)

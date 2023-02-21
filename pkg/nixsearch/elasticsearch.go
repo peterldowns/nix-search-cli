@@ -30,19 +30,26 @@ type Hit struct {
 }
 
 type Package struct {
-	Name          string   `json:"package_pname"`
-	AttrName      string   `json:"package_attr_name"`
-	AttrSet       string   `json:"package_attr_set"`
-	Outputs       []string `json:"package_outputs"`
-	DefaultOutput *string  `json:"package_default_output"`
-	Description   *string  `json:"package_description"`
-	Programs      []string `json:"package_programs"`
-	Homepage      []string `json:"package_homepage"`
-	Version       string   `json:"package_pversion"`
-	Platforms     []string `json:"package_platforms"`
-	Position      string   `json:"package_position"`
-	Licenses      []struct {
-		FullName string  `json:"fullName"`
-		URL      *string `json:"url"`
+	Name        string   `json:"package_pname"`
+	AttrName    string   `json:"package_attr_name"`
+	AttrSet     string   `json:"package_attr_set"`
+	Outputs     []string `json:"package_outputs"`
+	Description string   `json:"package_description"`
+	Programs    []string `json:"package_programs"`
+	Homepage    []string `json:"package_homepage"`
+	Version     string   `json:"package_pversion"`
+	Platforms   []string `json:"package_platforms"`
+	Position    string   `json:"package_position"`
+	Licenses    []struct {
+		FullName string `json:"fullName"`
+		URL      string `json:"url"`
 	} `json:"package_license"`
+	FlakeName        string `json:"flake_name"`
+	FlakeDescription string `json:"flake_description"`
+	FlakeResolved    struct {
+		Type  string `json:"type"`
+		Owner string `json:"owner"`
+		Repo  string `json:"repo"`
+		URL   string `json:"url"`
+	} `json:"flake_resolved"`
 }

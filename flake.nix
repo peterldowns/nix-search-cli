@@ -46,17 +46,21 @@
 
           devShells = rec {
             default = pkgs.mkShell {
-              packages = [
-                pkgs.delve
-                pkgs.go-outline
-                pkgs.go
-                pkgs.golangci-lint
-                pkgs.gopkgs
-                pkgs.gopls
-                pkgs.gotools
-                pkgs.just
-                pkgs.nixpkgs-fmt
-                pkgs.gomod2nix
+              packages = with pkgs; [
+                # golang
+                delve
+                go-outline
+                go
+                golangci-lint
+                gopkgs
+                gopls
+                gotools
+                # nix
+                pkgs.gomod2nix # have to use pkgs. prefix or it breaks lorri
+                rnix-lsp
+                nixpkgs-fmt
+                # other tools
+                just
               ];
 
               shellHook = ''
@@ -78,6 +82,9 @@
                 export GOPATH="$TOOLCHAIN_ROOT/go/path"
                 export GOMODCACHE="$GOPATH/pkg/mod"
                 export PATH=$(go env GOPATH)/bin:$PATH
+                # This project is pure go and does not need CGO. We disable it
+                # here as well as in the Dockerfile and nix build scripts.
+                export CGO_ENABLED=0
               '';
 
               # Need to disable fortify hardening because GCC is not built with -oO,
