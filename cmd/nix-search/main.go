@@ -16,9 +16,43 @@ import (
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
 )
 
+func trimLeading(s string) string {
+	in := strings.Split(strings.TrimSpace(s), "\n")
+	var out []string
+
+	for _, x := range in {
+		x = strings.TrimSpace(x)
+		if len(x) > 0 && x[0] == '#' {
+			x = color.New(color.Faint).Sprint(x)
+		}
+		out = append(out, "  "+x)
+	}
+	return strings.Join(out, "\n")
+}
+
 var rootCommand = &cobra.Command{
-	Use:              "nix-search",
-	Short:            "search for derivations via search.nixos.org",
+	Use:   "nix-search ...query",
+	Short: "search for packages via search.nixos.org",
+	Example: trimLeading(`
+# Search
+# ... like the web interface
+nix-search python linter
+nix-search --search "python linter"  
+# ... by attr name
+nix-search --attr python
+nix-search --attr 'emacsPackages.*'  
+# ... by version
+nix-search --version 1.20 
+nix-search --version '1.*'           
+# ... by installed programs
+nix-search --program python
+nix-search --program "py*"
+# ... with ElasticSearch QueryString syntax
+nix-search --query-string="package_programs:(crystal OR irb)"
+nix-search --query-string='package_description:(MIT Scheme)'
+# ... with multiple filters and options
+nix-search --attr go --version 1.20 --details
+	`),
 	TraverseChildren: true,
 	Args:             cobra.ArbitraryArgs,
 	Run:              root,
@@ -29,11 +63,11 @@ var rootFlags struct {
 	Search      *string
 	Program     *string
 	Attr        *string
+	Version     *string
 	QueryString *string
 	JSON        *bool
 	Details     *bool
 	MaxResults  *int
-	Version     *string
 }
 
 func root(c *cobra.Command, args []string) {
@@ -59,7 +93,7 @@ func root(c *cobra.Command, args []string) {
 	// If the user doesn't pass --query and they don't pass any positional
 	// arguments, show the usage and exit since there is no defined search term.
 	if input.Default == "" && input.Program == "" && input.Name == "" && input.Advanced == "" && input.Version == "" {
-		_ = c.Usage()
+		_ = c.Help()
 		return
 	}
 
@@ -89,20 +123,21 @@ func root(c *cobra.Command, args []string) {
 		}
 		name := formatPackageName(isTerminal, channel, pkg.AttrName)
 		fmt.Print(name)
-		if input.Version != "" {
-			vstring := color.New(color.FgGreen, color.Faint).Sprint(pkg.Version)
-			fmt.Print(" ", vstring)
-		}
-		if len(pkg.Programs) != 0 {
-			programs := formatDependencies(isTerminal, input, pkg.Programs)
-			fmt.Print(": ", programs)
-		}
-		fmt.Println()
 		if !showDetails {
+			vstring := color.New(color.FgGreen, color.Faint).Sprintf("@ %s", pkg.Version)
+			fmt.Print(" ", vstring)
+			if len(pkg.Programs) != 0 {
+				programs := formatDependencies(isTerminal, input, pkg.Programs)
+				fmt.Print(": ", programs)
+			}
+			fmt.Println()
 			continue
 		}
+		fmt.Println()
 		// version
 		fmt.Printf("  version: %s\n", pkg.Version)
+		// programs
+		fmt.Printf("  programs: %s\n", formatDependencies(isTerminal, input, pkg.Programs))
 		// description
 		d := ""
 		if pkg.Description != nil {

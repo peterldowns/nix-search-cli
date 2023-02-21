@@ -283,6 +283,8 @@ func DefaultQuery(query string) (string, error) {
 						"package_pname.*^3.5999999999999996",
 						"package_description^1.3",
 						"package_description.*^0.78",
+						"package_pversion^1.3",
+						"package_pversion.*^0.78",
 						"package_longDescription^1",
 						"package_longDescription.*^0.6"
 					]
