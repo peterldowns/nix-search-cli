@@ -25,6 +25,8 @@ var rootCommand = &cobra.Command{
 
 var rootFlags struct {
 	Query   *string
+	Program *string
+	Attr    *string
 	Channel *string
 }
 
@@ -38,10 +40,16 @@ func root(c *cobra.Command, args []string) {
 			query = strings.Join(args, " ")
 		}
 	}
+	input := nixsearch.Input{
+		Channel: channel,
+		Default: query,
+		Program: *rootFlags.Program,
+		Attr:    *rootFlags.Attr,
+	}
 
 	// If the user doesn't pass --query and they don't pass any positional
 	// arguments, show the usage and exit since there is no defined search term.
-	if query == "" {
+	if input.Default == "" && input.Program == "" && input.Attr == "" {
 		_ = c.Usage()
 		return
 	}
@@ -52,7 +60,7 @@ func root(c *cobra.Command, args []string) {
 		panic(fmt.Errorf("failed to load search client: %w", err))
 	}
 
-	packages, err := client.Search(ctx, channel, query)
+	packages, err := client.Search(ctx, input)
 	if err != nil {
 		panic(fmt.Errorf("failed search: %w", err))
 	}
@@ -154,8 +162,10 @@ func isMatch(a, b string) bool {
 func main() {
 	// Disable the builtin shell-completion script generator command
 	rootCommand.CompletionOptions.DisableDefaultCmd = true
-	rootFlags.Query = rootCommand.Flags().String("query", "", "the text to search for")
-	rootFlags.Channel = rootCommand.Flags().String("channel", "unstable", "which channel to search in")
+	rootFlags.Query = rootCommand.Flags().StringP("query", "q", "", "default fuzzy search")
+	rootFlags.Channel = rootCommand.Flags().StringP("channel", "c", "unstable", "which channel to search in")
+	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
+	rootFlags.Attr = rootCommand.Flags().StringP("attr", "a", "", "search by attr name")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)
