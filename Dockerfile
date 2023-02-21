@@ -7,7 +7,7 @@ FROM golang:1.18-alpine as builder
 WORKDIR $GOPATH/src/github.com/peterldowns/nix-search-cli
 
 ENV GO111MODULE=on
-ENV CGO_ENABLED=1
+ENV CGO_ENABLED=0
 
 # Install the dependencies
 COPY go.mod .
