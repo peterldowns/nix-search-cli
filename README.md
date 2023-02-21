@@ -65,10 +65,7 @@ google-cloud-sdk @ 408.0.1: gcloud bq docker-credential-gcloud git-credential-gc
 
 Here's how you would find out how to install python 3.12:
 
-```console
-$ ./bin/nix-search -p python -v 3.12
-python312 @ 3.12.0a5: python 2to3 2to3-3.12 idle idle3 idle3.12 pydoc pydoc3 pydoc3.12 python-config python3 python3-config python3.12 python3.12-config
-```
+[![asciicast](https://asciinema.org/a/9N61Y9RODg0EW1vhxnAbi0ITX.svg)](https://asciinema.org/a/9N61Y9RODg0EW1vhxnAbi0ITX)
 
 ## Install
 
