@@ -24,10 +24,11 @@ var rootCommand = &cobra.Command{
 }
 
 var rootFlags struct {
-	Query   *string
-	Program *string
-	Attr    *string
-	Channel *string
+	Channel  *string
+	Query    *string
+	Program  *string
+	Name     *string
+	Advanced *string
 }
 
 func root(c *cobra.Command, args []string) {
@@ -41,15 +42,16 @@ func root(c *cobra.Command, args []string) {
 		}
 	}
 	input := nixsearch.Input{
-		Channel: channel,
-		Default: query,
-		Program: *rootFlags.Program,
-		Attr:    *rootFlags.Attr,
+		Channel:  channel,
+		Default:  query,
+		Program:  *rootFlags.Program,
+		Name:     *rootFlags.Name,
+		Advanced: *rootFlags.Advanced,
 	}
 
 	// If the user doesn't pass --query and they don't pass any positional
 	// arguments, show the usage and exit since there is no defined search term.
-	if input.Default == "" && input.Program == "" && input.Attr == "" {
+	if input.Default == "" && input.Program == "" && input.Name == "" && input.Advanced == "" {
 		_ = c.Usage()
 		return
 	}
@@ -165,7 +167,8 @@ func main() {
 	rootFlags.Query = rootCommand.Flags().StringP("query", "q", "", "default fuzzy search")
 	rootFlags.Channel = rootCommand.Flags().StringP("channel", "c", "unstable", "which channel to search in")
 	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
-	rootFlags.Attr = rootCommand.Flags().StringP("attr", "a", "", "search by attr name")
+	rootFlags.Name = rootCommand.Flags().StringP("name", "n", "", "search by attr name")
+	rootFlags.Advanced = rootCommand.Flags().StringP("advanced", "a", "", "perform an advanced query string format search")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)

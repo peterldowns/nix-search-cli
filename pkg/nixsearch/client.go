@@ -27,10 +27,11 @@ func NewClient() (*Client, error) {
 }
 
 type Input struct {
-	Channel string
-	Default string
-	Program string
-	Attr    string
+	Channel  string
+	Default  string
+	Program  string
+	Advanced string
+	Name     string
 }
 
 func (c Client) Search(ctx context.Context, input Input) ([]Package, error) {
@@ -101,8 +102,8 @@ func formatQuery(input Input) (string, error) {
 		}
 		queries = append(queries, q)
 	}
-	if input.Attr != "" {
-		q, err := AttrQuery(input.Attr)
+	if input.Name != "" {
+		q, err := AttrQuery(input.Name)
 		if err != nil {
 			return "", err
 		}
@@ -110,6 +111,13 @@ func formatQuery(input Input) (string, error) {
 	}
 	if input.Program != "" {
 		q, err := ProgramQuery(input.Program)
+		if err != nil {
+			return "", err
+		}
+		queries = append(queries, q)
+	}
+	if input.Advanced != "" {
+		q, err := AdvancedQuery(input.Advanced)
 		if err != nil {
 			return "", err
 		}
@@ -164,6 +172,20 @@ func ProgramQuery(query string) (string, error) {
 			"fuzziness": 0,
 			"query": %s
 		}
+	}
+}
+	`, encQuery), nil
+}
+
+func AdvancedQuery(query string) (string, error) {
+	encQuery, err := json.Marshal(query)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`
+{
+	"query_string": {
+		"query": %s
 	}
 }
 	`, encQuery), nil
