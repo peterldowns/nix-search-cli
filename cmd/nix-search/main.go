@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -29,6 +30,7 @@ var rootFlags struct {
 	Program  *string
 	Name     *string
 	Advanced *string
+	JSON     *bool
 }
 
 func root(c *cobra.Command, args []string) {
@@ -77,6 +79,12 @@ func root(c *cobra.Command, args []string) {
 	showHomepage := true
 
 	for _, pkg := range packages {
+		// If asked to spit out json, just dump the packages directly
+		if rootFlags.JSON != nil && *rootFlags.JSON {
+			line, _ := json.Marshal(pkg)
+			fmt.Println(string(line))
+			continue
+		}
 		name := formatPackageName(isTerminal, channel, pkg.AttrName)
 		fmt.Print(name)
 		if len(pkg.Programs) != 0 {
@@ -169,6 +177,7 @@ func main() {
 	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
 	rootFlags.Name = rootCommand.Flags().StringP("name", "n", "", "search by attr name")
 	rootFlags.Advanced = rootCommand.Flags().StringP("advanced", "a", "", "perform an advanced query string format search")
+	rootFlags.JSON = rootCommand.Flags().BoolP("json", "j", false, "emit results in json-line format")
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)
