@@ -88,7 +88,7 @@ docker pull ghcr.io/peterldowns/nix-search-cli:latest
 Nix (flakes):
 ```bash
 # run it
-nix run github:peterldowns/nix-search-cli --help
+nix run github:peterldowns/nix-search-cli -- --help
 # install it
 nix profile install github:peterldowns/nix-search-cli --refresh
 ```
