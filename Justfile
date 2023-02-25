@@ -19,7 +19,6 @@ test *args='./...':
 lint *args:
   golangci-lint run --fix --config .golangci.yaml "$@"
 
-# build ./cmd/X -> ./bin/X, ./cmd/Y -> ./bin/Y, etc.
 build:
   go build -o bin/nix-search ./cmd/nix-search
 
@@ -69,3 +68,23 @@ release-binaries:
     -H "Content-Type: application/octet-stream" \
     --data-binary @bin/nix-search-linux-arm64 \
     "$upload_url?name=nix-search-linux-arm64&label=nix-search-linux-arm64"
+
+release-deb:
+  #!/usr/bin/env bash
+  mkdir -p ./dist
+  fpm \
+    -s dir \
+    -t deb \
+    -p ./dist/nix-search-cli-0.0.1-development.deb \
+    --name nix-search-cli \
+    --license mit \
+    --version 0.0.1 \
+    --architecture darwin/arm64 \
+    --description "search nix packages" \
+    --url "https://github.com/peterldowns/nix-search-cli" \
+    --maintainer "Peter Downs <github@peterdowns.com>" \
+    ./bin/
+  dpkg-deb \
+    --info ./nix-search-cli-0.0.1-development.deb
+  dpkg-deb \
+    -c ./nix-search-cli-0.0.1-development.deb

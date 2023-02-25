@@ -12,6 +12,7 @@
 
     gomod2nix.url = "github:nix-community/gomod2nix";
     gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
+    gomod2nix.inputs.utils.follows = "flake-utils";
   };
 
   outputs = { self, nixpkgs, flake-utils, flake-compat, nix-filter, gomod2nix }:
@@ -61,6 +62,10 @@
                 nixpkgs-fmt
                 # other tools
                 just
+                # packaging
+                fpm
+                dpkg
+                binutils
               ];
 
               shellHook = ''

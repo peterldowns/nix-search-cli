@@ -15,3 +15,6 @@ bin/
 
 # Used by `air` to hold build outputs
 tmp/
+
+# Where we put built .deb/.rpm stuff
+dist/
