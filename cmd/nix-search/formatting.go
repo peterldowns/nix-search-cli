@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
@@ -13,13 +12,70 @@ import (
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
 )
 
-func formatPackageName(isTerminal bool, input nixsearch.Query, pkg nixsearch.Package) string {
-	c := color.New(color.Underline, color.FgBlue)
-	if input.Flakes {
+func printResults(input nixsearch.Query, packages []nixsearch.Package) {
+	for _, pkg := range packages {
+		printResult(input, pkg)
+	}
+}
+
+func printResult(input nixsearch.Query, pkg nixsearch.Package) {
+	// { ... pkg contents ... }
+	shouldOutputJSON := (rootFlags.JSON != nil && *rootFlags.JSON)
+	if shouldOutputJSON {
+		bytes, _ := json.Marshal(pkg)
+		fmt.Println(string(bytes))
+		return
+	}
+
+	// name @ version: program1 program2 ...
+	shouldOutputDetails := (rootFlags.Details != nil && *rootFlags.Details)
+	if !shouldOutputDetails {
+		name := formatName(input, pkg)
+		fmt.Print(name)
+		if pkg.Version != "" {
+			version := formatVersion("@ " + pkg.Version)
+			fmt.Print(" ", version)
+		}
+		if len(pkg.Programs) > 0 {
+			programs := formatPrograms(input, pkg.Programs)
+			fmt.Print(" : ", programs)
+		}
+		fmt.Print("\n")
+		return
+	}
+
+	// examplePkg
+	//  version: 3.1
+	//  programs: hello goodbye true false
+	//  description: examplePkg is a made up package as an example.
+	//  homepage: [https://example.com]
+	//    - https://example.com/one
+	//    - https://example.org/two
+	//  license: [Single License Result Shown On One Line]
+	//    - Multiple License
+	//    - Results Shown Over Multiple Lines
+	name := formatName(input, pkg)
+	fmt.Print(name, "\n")
+	version := formatVersion(pkg.Version)
+	fmt.Printf("  version: %s\n", version)
+	programs := formatPrograms(input, pkg.Programs)
+	fmt.Printf("  programs: %s\n", programs)
+	description := formatDescription(pkg)
+	fmt.Printf("  description: %s\n", description)
+	fmt.Print("  homepage:")
+	fmt.Print(formatList(imap(func(s string) string {
+		return formatLink(s, s, color.Underline)
+	}, pkg.Homepage)))
+	fmt.Print("  license:")
+	fmt.Print(formatList(imap(formatLicense, pkg.Licenses)))
+}
+
+func formatName(input nixsearch.Query, pkg nixsearch.Package) string {
+	if pkg.IsFlake() {
 		var name string
 		switch pkg.FlakeResolved.Type {
 		case "github":
-			name = c.Sprintf(
+			name = fmt.Sprintf(
 				"%s:%s/%s#%s",
 				pkg.FlakeResolved.Type,
 				pkg.FlakeResolved.Owner,
@@ -27,30 +83,35 @@ func formatPackageName(isTerminal bool, input nixsearch.Query, pkg nixsearch.Pac
 				pkg.AttrName,
 			)
 		case "git":
-			name = c.Sprintf("%s#%s", pkg.FlakeResolved.URL, pkg.AttrName)
+			name = fmt.Sprintf("%s#%s", pkg.FlakeResolved.URL, pkg.AttrName)
 		default:
 			name = "unknown:" + pkg.FlakeName
 		}
-		if isTerminal {
-			url := fmt.Sprintf(`https://search.nixos.org/flakes?show=%s&query=%s`, pkg.AttrName, pkg.AttrName)
-			return escapes.Link(url, name)
-		}
-		return name
+		url := fmt.Sprintf(
+			`https://search.nixos.org/flakes?show=%s&query=%s`,
+			pkg.AttrName,
+			pkg.AttrName,
+		)
+		return formatLink(url, name, color.Underline, color.FgWhite)
 	}
-	if isTerminal {
-		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, input.Channel, pkg.AttrName)
-		return escapes.Link(url, c.Sprint(pkg.AttrName))
-	}
-	return pkg.AttrName
+	url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, input.Channel, pkg.AttrName)
+	return formatLink(url, pkg.AttrName)
 }
 
-func formatDependencies(isTerminal bool, input nixsearch.Query, programs []string) string {
+func formatVersion(version string) string {
+	return color.New(color.FgGreen, color.Faint).Sprint(version)
+}
+
+func formatPrograms(input nixsearch.Query, programs []string) string {
+	if len(programs) == 0 {
+		return ""
+	}
 	if isTerminal {
 		var matches []string
 		var others []string
 		// Dim all the programs that aren't what you searched for
 		for _, program := range programs {
-			if isMatch(input, program) {
+			if input.ExactlyMatches(program) {
 				matches = append(matches, color.New(color.Bold).Sprint(program))
 			} else {
 				others = append(others, color.New(color.Faint).Sprint(program))
@@ -64,75 +125,44 @@ func formatDependencies(isTerminal bool, input nixsearch.Query, programs []strin
 	return strings.Join(programs, " ")
 }
 
-func isMatch(input nixsearch.Query, program string) bool {
-	return ((input.Program != nil && input.Program.Program == program) ||
-		(input.QueryString != nil && input.QueryString.Advanced == program) ||
-		(input.Name != nil && input.Name.Name == program) ||
-		(input.Search != nil && input.Search.Search == program))
+func formatDescription(pkg nixsearch.Package) string {
+	return firstOf(pkg.FlakeDescription, pkg.Description)
 }
 
-func printResults(input nixsearch.Query, packages []nixsearch.Package) {
-	// thanks https://rderik.com/blog/identify-if-output-goes-to-the-terminal-or-is-being-redirected-in-golang/
-	o, _ := os.Stdout.Stat()
-	isTerminal := (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
+func formatLicense(license nixsearch.License) string {
+	return formatLink(license.URL, license.FullName, color.Underline)
+}
 
-	showDetails := *rootFlags.Details
-
-	for _, pkg := range packages {
-		// If asked to spit out json, just dump the packages directly
-		if rootFlags.JSON != nil && *rootFlags.JSON {
-			line, _ := json.Marshal(pkg)
-			fmt.Println(string(line))
-			continue
-		}
-		name := formatPackageName(isTerminal, input, pkg)
-		fmt.Print(name)
-		if !showDetails {
-			vstring := color.New(color.FgGreen, color.Faint).Sprintf("@ %s", pkg.Version)
-			fmt.Print(" ", vstring)
-			if len(pkg.Programs) != 0 {
-				programs := formatDependencies(isTerminal, input, pkg.Programs)
-				fmt.Print(": ", programs)
-			}
-			fmt.Println()
-			continue
-		}
-		fmt.Println()
-		// version
-		fmt.Printf("  version: %s\n", pkg.Version)
-		// programs
-		fmt.Printf("  programs: %s\n", formatDependencies(isTerminal, input, pkg.Programs))
-		// description
-		d := firstOf(pkg.FlakeDescription, pkg.Description)
-		fmt.Printf("  description: %s\n", d)
-		// license
-		fmt.Printf("  license:")
-		if len(pkg.Licenses) == 1 {
-			license := pkg.Licenses[0]
-			txt := license.FullName
-			if isTerminal && license.URL != "" {
-				txt = escapes.Link(license.URL, license.FullName)
-			}
-			fmt.Printf(" %s\n", txt)
+func formatLink(url, text string, attrs ...color.Attribute) string {
+	if url != "" {
+		var c *color.Color
+		if attrs != nil {
+			// Optional styling takes precedence
+			c = color.New(attrs...)
 		} else {
-			fmt.Printf("\n")
-			for _, license := range pkg.Licenses {
-				txt := license.FullName
-				if isTerminal && license.URL != "" {
-					txt = escapes.Link(license.URL, license.FullName)
-				}
-				fmt.Printf("    - %s\n", txt)
-			}
+			// Default styling
+			c = color.New(color.Underline, color.FgBlue)
 		}
-		// homepage
-		fmt.Printf("  homepage:")
-		if len(pkg.Homepage) == 1 {
-			fmt.Printf(" %s\n", pkg.Homepage[0])
-		} else {
-			fmt.Printf("\n")
-			for _, homepage := range pkg.Homepage {
-				fmt.Printf("    - %s\n", homepage)
-			}
+		if isTerminal {
+			return escapes.Link(url, c.Sprint(text))
 		}
+		return c.Sprint(text)
 	}
+	return text
+}
+
+func formatList(data []string) string {
+	if len(data) == 0 {
+		return "\n"
+	}
+	if len(data) == 1 {
+		return fmt.Sprintf(" %s\n", data[0])
+	}
+	fmt.Printf("\n")
+	out := strings.Builder{}
+	out.WriteString("\n")
+	for _, s := range data {
+		out.WriteString(fmt.Sprintf("    - %s\n", s))
+	}
+	return out.String()
 }

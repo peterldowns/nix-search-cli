@@ -4,8 +4,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
@@ -40,7 +42,7 @@ nix-search --name go --version 1.20 --details
 	`),
 	TraverseChildren: true,
 	Args:             cobra.ArbitraryArgs,
-	Run:              root,
+	RunE:             root,
 }
 
 var rootFlags struct {
@@ -56,7 +58,7 @@ var rootFlags struct {
 	MaxResults  *int
 }
 
-func root(c *cobra.Command, args []string) {
+func root(c *cobra.Command, args []string) error {
 	channel := *rootFlags.Channel
 	query := *rootFlags.Search
 	if len(args) != 0 {
@@ -85,33 +87,33 @@ func root(c *cobra.Command, args []string) {
 		input.Version = &nixsearch.MatchVersion{Version: x}
 	}
 	if x := *rootFlags.QueryString; x != "" {
-		input.QueryString = &nixsearch.MatchAdvanced{Advanced: x}
+		input.QueryString = &nixsearch.MatchQueryString{QueryString: x}
 	}
 
 	// If the user doesn't give any search terms or any flags, show the
 	// program's usage information and exit.
 	if input.IsEmpty() {
 		_ = c.Help()
-		return
+		return nil
 	}
 
 	ctx := context.Background()
 	client, err := nixsearch.NewElasticSearchClient()
 	if err != nil {
-		panic(fmt.Errorf("failed to load search client: %w", err))
+		return err
 	}
 
 	packages, err := client.Search(ctx, input)
 	if err != nil {
-		panic(fmt.Errorf("failed search: %w", err))
+		return err
 	}
 
 	printResults(input, packages)
+	return nil
 }
 
 func main() {
-	// Disable the builtin shell-completion script generator command
-	rootCommand.CompletionOptions.DisableDefaultCmd = true
+	rootCommand.CompletionOptions.DisableDefaultCmd = true // Disable the builtin shell-completion script generator command
 	rootFlags.Search = rootCommand.Flags().StringP("search", "s", "", "default search, same as the website")
 	rootFlags.Channel = rootCommand.Flags().StringP("channel", "c", "unstable", "which channel to search in")
 	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
@@ -122,8 +124,25 @@ func main() {
 	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 20, "maximum number of results to return")
 	rootFlags.Version = rootCommand.Flags().StringP("version", "v", "", "search by version")
 	rootFlags.Flakes = rootCommand.Flags().BoolP("flakes", "f", false, "search flakes instead of nixpkgs")
+	rootCommand.SilenceErrors = true
+	rootCommand.SilenceUsage = true
+
+	// todo: defer panic() recover() handler as well
+	defer func() {
+		switch r := recover().(type) {
+		case error:
+			onError(r)
+		default:
+		}
+	}()
 
 	if err := rootCommand.Execute(); err != nil {
-		panic(err)
+		onError(err)
 	}
+}
+
+func onError(err error) {
+	errstr := color.New(color.FgRed, color.Italic).Sprint("error: ", err.Error())
+	fmt.Fprintln(os.Stderr, "\n", errstr)
+	os.Exit(1)
 }

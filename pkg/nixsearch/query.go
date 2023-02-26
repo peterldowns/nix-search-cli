@@ -22,54 +22,73 @@ type Query struct {
 	// Version filters by the version of the package.
 	Version *MatchVersion
 	// QueryString filters by a custom ElasticSearch QueryString-syntax query.
-	QueryString *MatchAdvanced
+	QueryString *MatchQueryString
+}
+
+func (q Query) ExactlyMatches(program string) bool {
+	if q.Program != nil && q.Program.Program == program {
+		return true
+	}
+	if q.QueryString != nil && q.QueryString.QueryString == program {
+		return true
+	}
+	if q.Name != nil && q.Name.Name == program {
+		return true
+	}
+	if q.Search != nil && q.Search.Search == program {
+		return true
+	}
+	return false
 }
 
 // IsEmpty returns false if any match has been set
-func (query Query) IsEmpty() bool {
-	if query.Search != nil {
+func (q Query) IsEmpty() bool {
+	if q.Search != nil {
 		return false
 	}
-	if query.Program != nil {
+	if q.Program != nil {
 		return false
 	}
-	if query.Name != nil {
+	if q.Name != nil {
 		return false
 	}
-	if query.QueryString != nil {
+	if q.QueryString != nil {
 		return false
 	}
-	if query.Version != nil {
+	if q.Version != nil {
 		return false
 	}
 	return true
 }
 
-// Dict is a convenience helper for constructing JSON queries to send to Elasticsearch.
-type Dict map[string]interface{}
-
 // Payload returns a map[string]any that is ready to be serialized to JSON
 // and sent to ElasticSearch.
-func (query Query) Payload() ([]byte, error) {
-	var must []any
-	if query.Search != nil {
-		must = append(must, query.Search)
+func (q Query) Payload() ([]byte, error) {
+	must := []any{
+		Dict{
+			"match": Dict{
+				"type": "package",
+			},
+		},
 	}
-	if query.Name != nil {
-		must = append(must, query.Name)
+	if q.Search != nil {
+		must = append(must, q.Search)
 	}
-	if query.Program != nil {
-		must = append(must, query.Program)
+	if q.Name != nil {
+		must = append(must, q.Name)
 	}
-	if query.Version != nil {
-		must = append(must, query.Version)
+	if q.Program != nil {
+		must = append(must, q.Program)
 	}
-	if query.QueryString != nil {
-		must = append(must, query.QueryString)
+	if q.Version != nil {
+		must = append(must, q.Version)
+	}
+	if q.QueryString != nil {
+		must = append(must, q.QueryString)
 	}
 	return json.Marshal(Dict{
 		"from": 0,
-		"size": query.MaxResults,
+		"size": q.MaxResults,
 		"sort": []Dict{
 			{
 				"_score":            "desc",
@@ -84,3 +103,6 @@ func (query Query) Payload() ([]byte, error) {
 		},
 	})
 }
+
+// Dict is a convenience helper for constructing JSON queries to send to Elasticsearch.
+type Dict map[string]interface{}

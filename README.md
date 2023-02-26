@@ -189,3 +189,9 @@ nix flake lock
 # Update all dependencies and update the flake.lock file
 nix flake update
 ```
+
+### TODOs
+- package godocs completed
+- package use documentation in README
+- shell completions in nix package and generatable
+- option searching

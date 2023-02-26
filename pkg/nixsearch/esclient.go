@@ -50,7 +50,15 @@ func (c ElasticSearchClient) Search(ctx context.Context, input Query) ([]Package
 	if err != nil {
 		return nil, err
 	}
-	return packages, nil
+
+	var out []Package
+	for _, p := range packages {
+		if p.Type != "package" {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out, nil
 }
 
 func newRequest(ctx context.Context, input Query) (*http.Request, error) {

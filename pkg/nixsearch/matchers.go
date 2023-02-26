@@ -134,14 +134,14 @@ func (m MatchVersion) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type MatchAdvanced struct {
-	Advanced string
+type MatchQueryString struct {
+	QueryString string
 }
 
-func (m MatchAdvanced) MarshalJSON() ([]byte, error) {
+func (m MatchQueryString) MarshalJSON() ([]byte, error) {
 	return json.Marshal(Dict{
 		"query_string": Dict{
-			"query": m.Advanced,
+			"query": m.QueryString,
 		},
 	})
 }
