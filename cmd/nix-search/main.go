@@ -3,32 +3,13 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
-	"sort"
 	"strings"
 
-	"github.com/fatih/color"
-	escapes "github.com/snugfox/ansi-escapes"
 	"github.com/spf13/cobra"
 
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
 )
-
-func trimLeading(s string) string {
-	in := strings.Split(strings.TrimSpace(s), "\n")
-	var out []string
-
-	for _, x := range in {
-		x = strings.TrimSpace(x)
-		if len(x) > 0 && x[0] == '#' {
-			x = color.New(color.Faint).Sprint(x)
-		}
-		out = append(out, "  "+x)
-	}
-	return strings.Join(out, "\n")
-}
 
 var rootCommand = &cobra.Command{
 	Use:   "nix-search ...query",
@@ -38,9 +19,9 @@ var rootCommand = &cobra.Command{
 # ... like the web interface
 nix-search python linter
 nix-search --search "python linter"  
-# ... by attr name
-nix-search --attr python
-nix-search --attr 'emacsPackages.*'  
+# ... by package name
+nix-search --name python
+nix-search --name 'emacsPackages.*'  
 # ... by version
 nix-search --version 1.20 
 nix-search --version '1.*'           
@@ -55,21 +36,11 @@ nix-search --channel=unstable python3
 # ... or flakes
 nix-search --flakes wayland
 # ... with multiple filters and options
-nix-search --attr go --version 1.20 --details
+nix-search --name go --version 1.20 --details
 	`),
 	TraverseChildren: true,
 	Args:             cobra.ArbitraryArgs,
 	Run:              root,
-}
-
-func firstOf(s ...string) string {
-	for _, x := range s {
-		x = strings.TrimSpace(x)
-		if x != "" {
-			return x
-		}
-	}
-	return ""
 }
 
 var rootFlags struct {
@@ -77,7 +48,7 @@ var rootFlags struct {
 	Flakes      *bool
 	Search      *string
 	Program     *string
-	Attr        *string
+	Name        *string
 	Version     *string
 	QueryString *string
 	JSON        *bool
@@ -95,26 +66,37 @@ func root(c *cobra.Command, args []string) {
 			query = strings.Join(args, " ")
 		}
 	}
-	input := nixsearch.Input{
+
+	input := nixsearch.Query{
 		Channel:    channel,
 		Flakes:     *rootFlags.Flakes,
-		Default:    query,
-		Program:    *rootFlags.Program,
-		Name:       *rootFlags.Attr,
-		Advanced:   *rootFlags.QueryString,
 		MaxResults: *rootFlags.MaxResults,
-		Version:    *rootFlags.Version,
+	}
+	if x := query; x != "" {
+		input.Search = &nixsearch.MatchSearch{Search: x}
+	}
+	if x := *rootFlags.Program; x != "" {
+		input.Program = &nixsearch.MatchProgram{Program: x}
+	}
+	if x := *rootFlags.Name; x != "" {
+		input.Name = &nixsearch.MatchName{Name: x}
+	}
+	if x := *rootFlags.Version; x != "" {
+		input.Version = &nixsearch.MatchVersion{Version: x}
+	}
+	if x := *rootFlags.QueryString; x != "" {
+		input.QueryString = &nixsearch.MatchAdvanced{Advanced: x}
 	}
 
-	// If the user doesn't pass --query and they don't pass any positional
-	// arguments, show the usage and exit since there is no defined search term.
-	if input.Default == "" && input.Program == "" && input.Name == "" && input.Advanced == "" && input.Version == "" {
+	// If the user doesn't give any search terms or any flags, show the
+	// program's usage information and exit.
+	if input.IsEmpty() {
 		_ = c.Help()
 		return
 	}
 
 	ctx := context.Background()
-	client, err := nixsearch.NewClient()
+	client, err := nixsearch.NewElasticSearchClient()
 	if err != nil {
 		panic(fmt.Errorf("failed to load search client: %w", err))
 	}
@@ -124,127 +106,7 @@ func root(c *cobra.Command, args []string) {
 		panic(fmt.Errorf("failed search: %w", err))
 	}
 
-	// thanks https://rderik.com/blog/identify-if-output-goes-to-the-terminal-or-is-being-redirected-in-golang/
-	o, _ := os.Stdout.Stat()
-	isTerminal := (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
-
-	showDetails := *rootFlags.Details
-
-	for _, pkg := range packages {
-		// If asked to spit out json, just dump the packages directly
-		if rootFlags.JSON != nil && *rootFlags.JSON {
-			line, _ := json.Marshal(pkg)
-			fmt.Println(string(line))
-			continue
-		}
-		name := formatPackageName(isTerminal, input, pkg)
-		fmt.Print(name)
-		if !showDetails {
-			vstring := color.New(color.FgGreen, color.Faint).Sprintf("@ %s", pkg.Version)
-			fmt.Print(" ", vstring)
-			if len(pkg.Programs) != 0 {
-				programs := formatDependencies(isTerminal, input, pkg.Programs)
-				fmt.Print(": ", programs)
-			}
-			fmt.Println()
-			continue
-		}
-		fmt.Println()
-		// version
-		fmt.Printf("  version: %s\n", pkg.Version)
-		// programs
-		fmt.Printf("  programs: %s\n", formatDependencies(isTerminal, input, pkg.Programs))
-		// description
-		d := firstOf(pkg.FlakeDescription, pkg.Description)
-		fmt.Printf("  description: %s\n", d)
-		// license
-		fmt.Printf("  license:")
-		if len(pkg.Licenses) == 1 {
-			license := pkg.Licenses[0]
-			txt := license.FullName
-			if isTerminal && license.URL != "" {
-				txt = escapes.Link(license.URL, license.FullName)
-			}
-			fmt.Printf(" %s\n", txt)
-		} else {
-			fmt.Printf("\n")
-			for _, license := range pkg.Licenses {
-				txt := license.FullName
-				if isTerminal && license.URL != "" {
-					txt = escapes.Link(license.URL, license.FullName)
-				}
-				fmt.Printf("    - %s\n", txt)
-			}
-		}
-		// homepage
-		fmt.Printf("  homepage:")
-		if len(pkg.Homepage) == 1 {
-			fmt.Printf(" %s\n", pkg.Homepage[0])
-		} else {
-			fmt.Printf("\n")
-			for _, homepage := range pkg.Homepage {
-				fmt.Printf("    - %s\n", homepage)
-			}
-		}
-	}
-}
-
-func formatPackageName(isTerminal bool, input nixsearch.Input, pkg nixsearch.Package) string {
-	c := color.New(color.Underline, color.FgBlue)
-	if input.Flakes {
-		var name string
-		switch pkg.FlakeResolved.Type {
-		case "github":
-			name = c.Sprintf(
-				"%s:%s/%s#%s",
-				pkg.FlakeResolved.Type,
-				pkg.FlakeResolved.Owner,
-				pkg.FlakeResolved.Repo,
-				pkg.AttrName,
-			)
-		case "git":
-			name = c.Sprintf("%s#%s", pkg.FlakeResolved.URL, pkg.AttrName)
-		default:
-			name = "unknown:" + pkg.FlakeName
-		}
-		if isTerminal {
-			url := fmt.Sprintf(`https://search.nixos.org/flakes?show=%s&query=%s`, pkg.AttrName, pkg.AttrName)
-			return escapes.Link(url, name)
-		}
-		return name
-	}
-	if isTerminal {
-		url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, input.Channel, pkg.AttrName)
-		return escapes.Link(url, c.Sprint(pkg.AttrName))
-	}
-	return pkg.AttrName
-}
-
-func formatDependencies(isTerminal bool, input nixsearch.Input, programs []string) string {
-	if isTerminal {
-		var matches []string
-		var others []string
-		// Dim all the programs that aren't what you searched for
-		for _, program := range programs {
-			if isMatch(input, program) {
-				matches = append(matches, color.New(color.Bold).Sprint(program))
-			} else {
-				others = append(others, color.New(color.Faint).Sprint(program))
-			}
-		}
-		sort.Strings(matches)
-		sort.Strings(others)
-		matches = append(matches, others...)
-		programs = matches
-	}
-	return strings.Join(programs, " ")
-}
-
-func isMatch(input nixsearch.Input, program string) bool {
-	return (input.Program == program ||
-		input.Advanced == program ||
-		input.Name == program ||
-		input.Default == program)
+	printResults(input, packages)
 }
 
 func main() {
@@ -253,8 +115,8 @@ func main() {
 	rootFlags.Search = rootCommand.Flags().StringP("search", "s", "", "default search, same as the website")
 	rootFlags.Channel = rootCommand.Flags().StringP("channel", "c", "unstable", "which channel to search in")
 	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
-	rootFlags.Attr = rootCommand.Flags().StringP("attr", "a", "", "search by attr name")
-	rootFlags.QueryString = rootCommand.Flags().StringP("query-string", "q", "", "perform an advanced query string format search")
+	rootFlags.Name = rootCommand.Flags().StringP("name", "n", "", "search by package name")
+	rootFlags.QueryString = rootCommand.Flags().StringP("query-string", "q", "", "search by elasticsearch querystring")
 	rootFlags.JSON = rootCommand.Flags().BoolP("json", "j", false, "emit results in json-line format")
 	rootFlags.Details = rootCommand.Flags().BoolP("details", "d", false, "show expanded details for each result")
 	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 20, "maximum number of results to return")
