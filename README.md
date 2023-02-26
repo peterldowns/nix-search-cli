@@ -22,9 +22,9 @@ Examples:
   # ... like the web interface
   nix-search python linter
   nix-search --search "python linter"
-  # ... by attr name
-  nix-search --attr python
-  nix-search --attr 'emacsPackages.*'
+  # ... by package name
+  nix-search --name python
+  nix-search --name 'emacsPackages.*'
   # ... by version
   nix-search --version 1.20
   nix-search --version '1.*'
@@ -39,18 +39,18 @@ Examples:
   # ... or flakes
   nix-search --flakes wayland
   # ... with multiple filters and options
-  nix-search --attr go --version 1.20 --details
+  nix-search --name go --version 1.20 --details
 
 Flags:
-  -a, --attr string           search by attr name
   -c, --channel string        which channel to search in (default "unstable")
   -d, --details               show expanded details for each result
   -f, --flakes                search flakes instead of nixpkgs
   -h, --help                  help for nix-search
   -j, --json                  emit results in json-line format
   -m, --max-results int       maximum number of results to return (default 20)
+  -n, --name string           search by package name
   -p, --program string        search by installed programs
-  -q, --query-string string   perform an advanced query string format search
+  -q, --query-string string   search by elasticsearch querystring
   -s, --search string         default search, same as the website
   -v, --version string        search by version
 ```
