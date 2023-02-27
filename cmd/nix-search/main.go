@@ -127,7 +127,6 @@ func main() {
 	rootCommand.SilenceErrors = true
 	rootCommand.SilenceUsage = true
 
-	// todo: defer panic() recover() handler as well
 	defer func() {
 		switch r := recover().(type) {
 		case error:
