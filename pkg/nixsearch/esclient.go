@@ -35,8 +35,8 @@ func NewElasticSearchClient() (*ElasticSearchClient, error) {
 	}, nil
 }
 
-func (c ElasticSearchClient) Search(ctx context.Context, input Query) ([]Package, error) {
-	req, err := newRequest(ctx, input)
+func (c ElasticSearchClient) Search(ctx context.Context, query Query) ([]Package, error) {
+	req, err := newRequest(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -61,15 +61,15 @@ func (c ElasticSearchClient) Search(ctx context.Context, input Query) ([]Package
 	return out, nil
 }
 
-func newRequest(ctx context.Context, input Query) (*http.Request, error) {
+func newRequest(ctx context.Context, query Query) (*http.Request, error) {
 	index := ""
-	if input.Flakes {
+	if query.Flakes {
 		index = ElasticSearchIndexPrefix + "group-manual"
 	} else {
-		index = ElasticSearchIndexPrefix + url.QueryEscape("nixos-"+input.Channel)
+		index = ElasticSearchIndexPrefix + url.QueryEscape("nixos-"+query.Channel)
 	}
 	url := fmt.Sprintf(ElasticSearchURLTemplate, index)
-	payload, err := input.Payload()
+	payload, err := query.Payload()
 	if err != nil {
 		return nil, err
 	}

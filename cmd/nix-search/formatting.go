@@ -12,13 +12,13 @@ import (
 	"github.com/peterldowns/nix-search-cli/pkg/nixsearch"
 )
 
-func printResults(input nixsearch.Query, packages []nixsearch.Package) {
+func printResults(query nixsearch.Query, packages []nixsearch.Package) {
 	for _, pkg := range packages {
-		printResult(input, pkg)
+		printResult(query, pkg)
 	}
 }
 
-func printResult(input nixsearch.Query, pkg nixsearch.Package) {
+func printResult(query nixsearch.Query, pkg nixsearch.Package) {
 	// { ... pkg contents ... }
 	shouldOutputJSON := (rootFlags.JSON != nil && *rootFlags.JSON)
 	if shouldOutputJSON {
@@ -30,14 +30,14 @@ func printResult(input nixsearch.Query, pkg nixsearch.Package) {
 	// name @ version: program1 program2 ...
 	shouldOutputDetails := (rootFlags.Details != nil && *rootFlags.Details)
 	if !shouldOutputDetails {
-		name := formatName(input, pkg)
+		name := formatName(query, pkg)
 		fmt.Print(name)
 		if pkg.Version != "" {
 			version := formatVersion("@ " + pkg.Version)
 			fmt.Print(" ", version)
 		}
 		if len(pkg.Programs) > 0 {
-			programs := formatPrograms(input, pkg.Programs)
+			programs := formatPrograms(query, pkg.Programs)
 			fmt.Print(" : ", programs)
 		}
 		fmt.Print("\n")
@@ -54,11 +54,11 @@ func printResult(input nixsearch.Query, pkg nixsearch.Package) {
 	//  license: [Single License Result Shown On One Line]
 	//    - Multiple License
 	//    - Results Shown Over Multiple Lines
-	name := formatName(input, pkg)
+	name := formatName(query, pkg)
 	fmt.Print(name, "\n")
 	version := formatVersion(pkg.Version)
 	fmt.Printf("  version: %s\n", version)
-	programs := formatPrograms(input, pkg.Programs)
+	programs := formatPrograms(query, pkg.Programs)
 	fmt.Printf("  programs: %s\n", programs)
 	description := formatDescription(pkg)
 	fmt.Printf("  description: %s\n", description)
@@ -70,7 +70,7 @@ func printResult(input nixsearch.Query, pkg nixsearch.Package) {
 	fmt.Print(formatList(imap(formatLicense, pkg.Licenses)))
 }
 
-func formatName(input nixsearch.Query, pkg nixsearch.Package) string {
+func formatName(query nixsearch.Query, pkg nixsearch.Package) string {
 	if pkg.IsFlake() {
 		var name string
 		switch pkg.FlakeResolved.Type {
@@ -94,7 +94,7 @@ func formatName(input nixsearch.Query, pkg nixsearch.Package) string {
 		)
 		return formatLink(url, name, color.Underline, color.FgWhite)
 	}
-	url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, input.Channel, pkg.AttrName)
+	url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, query.Channel, pkg.AttrName)
 	return formatLink(url, pkg.AttrName)
 }
 
@@ -102,7 +102,7 @@ func formatVersion(version string) string {
 	return color.New(color.FgGreen, color.Faint).Sprint(version)
 }
 
-func formatPrograms(input nixsearch.Query, programs []string) string {
+func formatPrograms(query nixsearch.Query, programs []string) string {
 	if len(programs) == 0 {
 		return ""
 	}
@@ -111,7 +111,7 @@ func formatPrograms(input nixsearch.Query, programs []string) string {
 		var others []string
 		// Dim all the programs that aren't what you searched for
 		for _, program := range programs {
-			if input.ExactlyMatches(program) {
+			if query.ExactlyMatches(program) {
 				matches = append(matches, color.New(color.Bold).Sprint(program))
 			} else {
 				others = append(others, color.New(color.Faint).Sprint(program))

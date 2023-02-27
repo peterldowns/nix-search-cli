@@ -60,39 +60,39 @@ var rootFlags struct {
 
 func root(c *cobra.Command, args []string) error {
 	channel := *rootFlags.Channel
-	query := *rootFlags.Search
+	search := *rootFlags.Search
 	if len(args) != 0 {
-		if query != "" {
+		if search != "" {
 			fmt.Printf("[warning]: arbitrary arguments are being ignored due to explicit --query\n")
 		} else {
-			query = strings.Join(args, " ")
+			search = strings.Join(args, " ")
 		}
 	}
 
-	input := nixsearch.Query{
+	query := nixsearch.Query{
 		Channel:    channel,
 		Flakes:     *rootFlags.Flakes,
 		MaxResults: *rootFlags.MaxResults,
 	}
-	if x := query; x != "" {
-		input.Search = &nixsearch.MatchSearch{Search: x}
+	if x := search; x != "" {
+		query.Search = &nixsearch.MatchSearch{Search: x}
 	}
 	if x := *rootFlags.Program; x != "" {
-		input.Program = &nixsearch.MatchProgram{Program: x}
+		query.Program = &nixsearch.MatchProgram{Program: x}
 	}
 	if x := *rootFlags.Name; x != "" {
-		input.Name = &nixsearch.MatchName{Name: x}
+		query.Name = &nixsearch.MatchName{Name: x}
 	}
 	if x := *rootFlags.Version; x != "" {
-		input.Version = &nixsearch.MatchVersion{Version: x}
+		query.Version = &nixsearch.MatchVersion{Version: x}
 	}
 	if x := *rootFlags.QueryString; x != "" {
-		input.QueryString = &nixsearch.MatchQueryString{QueryString: x}
+		query.QueryString = &nixsearch.MatchQueryString{QueryString: x}
 	}
 
 	// If the user doesn't give any search terms or any flags, show the
 	// program's usage information and exit.
-	if input.IsEmpty() {
+	if query.IsEmpty() {
 		_ = c.Help()
 		return nil
 	}
@@ -103,12 +103,12 @@ func root(c *cobra.Command, args []string) error {
 		return err
 	}
 
-	packages, err := client.Search(ctx, input)
+	packages, err := client.Search(ctx, query)
 	if err != nil {
 		return err
 	}
 
-	printResults(input, packages)
+	printResults(query, packages)
 	return nil
 }
 
