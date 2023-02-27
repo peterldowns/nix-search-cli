@@ -12,6 +12,7 @@
 
     gomod2nix.url = "github:nix-community/gomod2nix";
     gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
+    gomod2nix.inputs.utils.follows = "flake-utils";
   };
 
   outputs = { self, nixpkgs, flake-utils, flake-compat, nix-filter, gomod2nix }:
@@ -29,7 +30,7 @@
           packages = rec {
             nix-search = pkgs.buildGoApplication {
               pname = "nix-search-cli";
-              version = "0.0.2";
+              version = "0.0.3";
               src = ./.;
               modules = ./gomod2nix.toml;
             };
