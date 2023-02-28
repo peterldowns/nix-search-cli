@@ -77,12 +77,9 @@ go run github.com/peterldowns/nix-search-cli/cmd/nix-search@latest --help
 go install github.com/peterldowns/nix-search-cli/cmd/nix-search@latest
 ```
 
-Docker:
+Homebrew:
 ```bash
-# run it
-docker run --rm -it ghcr.io/peterldowns/nix-search-cli:latest --help
-# pull it
-docker pull ghcr.io/peterldowns/nix-search-cli:latest
+brew install peterldowns/tap/nix-search-cli
 ```
 
 Nix (flakes):
@@ -91,6 +88,14 @@ Nix (flakes):
 nix run github:peterldowns/nix-search-cli -- --help
 # install it
 nix profile install github:peterldowns/nix-search-cli --refresh
+```
+
+Docker:
+```bash
+# run it
+docker run --rm -it ghcr.io/peterldowns/nix-search-cli:latest --help
+# pull it
+docker pull ghcr.io/peterldowns/nix-search-cli:latest
 ```
 
 Manual:
