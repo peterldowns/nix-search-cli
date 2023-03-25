@@ -17,7 +17,7 @@ import (
 const (
 	ElasticSearchUsername    = "aWVSALXpZv"
 	ElasticSearchPassword    = "X8gPHnzL52wFEekuxsfQ9cSh"
-	ElasticSearchIndexPrefix = "latest-37-"
+	ElasticSearchIndexPrefix = "latest-40-"
 	ElasticSearchURLTemplate = `https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/%s/_search`
 )
 
