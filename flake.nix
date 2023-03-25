@@ -1,5 +1,5 @@
 {
-  description = "demo is a golang binary";
+  description = "CLI for searching packages on search.nixos.org";
   inputs = {
     nixpkgs.url = github:nixos/nixpkgs/nixos-unstable;
 
@@ -8,21 +8,19 @@
     flake-compat.url = github:edolstra/flake-compat;
     flake-compat.flake = false;
 
-    nix-filter.url = github:numtide/nix-filter;
-
     gomod2nix.url = "github:nix-community/gomod2nix";
     gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
     gomod2nix.inputs.utils.follows = "flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, flake-compat, nix-filter, gomod2nix }:
-    flake-utils.lib.eachDefaultSystem
+  outputs = inputs@{ ... }:
+    inputs.flake-utils.lib.eachDefaultSystem
       (system:
         let
           overlays = [
-            gomod2nix.overlays.default
+            inputs.gomod2nix.overlays.default
           ];
-          pkgs = import nixpkgs {
+          pkgs = import inputs.nixpkgs {
             inherit system overlays;
           };
         in
@@ -36,6 +34,7 @@
             };
             default = nix-search;
           };
+          defaultPackage = packages.default;
 
           apps = rec {
             nix-search = {
@@ -44,6 +43,7 @@
             };
             default = nix-search;
           };
+          defaultApp = apps.default;
 
           devShells = rec {
             default = pkgs.mkShell {
@@ -57,8 +57,8 @@
                 gopls
                 gotools
                 ## nix
-                pkgs.gomod2nix # have to use pkgs. prefix or it breaks lorri
-                #rnix-lsp
+                gomod2nix
+                rnix-lsp
                 nixpkgs-fmt
                 ## other tools
                 just
@@ -97,6 +97,7 @@
               hardeningDisable = [ "fortify" ];
             };
           };
+          devShell = devShells.default;
         }
       );
 }
