@@ -1,5 +1,0 @@
-[global]
-warn_timeout = "10m"
-
-[whitelist]
-prefix = [ "/" ]
