@@ -28,7 +28,7 @@
           packages = rec {
             nix-search = pkgs.buildGoApplication {
               pname = "nix-search-cli";
-              version = "0.0.3";
+              version = "0.0.4";
               src = ./.;
               modules = ./gomod2nix.toml;
             };
