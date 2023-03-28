@@ -12,13 +12,25 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
-// All constants are taken from the upstream repository
-// https://github.com/NixOS/nixos-search/blob/main/frontend/src/index.js
 const (
+	// Taken from the upstream repository
+	// https://github.com/NixOS/nixos-search/blob/main/frontend/src/index.js
 	ElasticSearchUsername    = "aWVSALXpZv"
 	ElasticSearchPassword    = "X8gPHnzL52wFEekuxsfQ9cSh"
-	ElasticSearchIndexPrefix = "latest-40-"
 	ElasticSearchURLTemplate = `https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/%s/_search`
+	// See the list of available indexes at
+	// https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/_aliases
+	// They're in the format "latest-<VERSION>-identifier", e.g.
+	//   - latest-40-group-manual
+	//   - latest-40-nixos-unstable
+	//   - latest-40-nixos-22.11
+	// As the indices are updated, the version number changes over time, and old
+	// version numbers stop working because the related indices are deleted. The
+	// upstream project does not create a version-number-less alias (although
+	// they could easily) so we do the next best thing and use a wildcard prefix
+	// for the version number. Experimentally, results are the same as before,
+	// it doesn't matter that we're querying over multiple indices.
+	ElasticSearchIndexPrefix = "latest-*-"
 )
 
 type ElasticSearchClient struct {
