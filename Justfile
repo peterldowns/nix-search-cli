@@ -19,7 +19,7 @@ test *args='./...':
 lint *args:
   golangci-lint run --fix --config .golangci.yaml "$@"
 
-# build ./cmd/X -> ./bin/X, ./cmd/Y -> ./bin/Y, etc.
+# build ./bin/nix-search
 build:
   go build -o bin/nix-search ./cmd/nix-search
 
