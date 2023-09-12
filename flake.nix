@@ -23,7 +23,6 @@
           pkgs = import inputs.nixpkgs {
             inherit system overlays;
           };
-          warnToUpgrade = pkgs.lib.warn "Please upgrade Nix to 2.7 or later.";
         in
         rec {
           packages = rec {
@@ -35,7 +34,6 @@
             };
             default = nix-search;
           };
-          defaultPackage = warnToUpgrade packages.default; # for compat with pre-2.7 flakes
 
           apps = rec {
             nix-search = {
@@ -44,7 +42,6 @@
             };
             default = nix-search;
           };
-          defaultApp = warnToUpgrade apps.default; # for compat with pre-2.7 flakes
 
           devShells = rec {
             default = pkgs.mkShell {
@@ -98,7 +95,6 @@
               hardeningDisable = [ "fortify" ];
             };
           };
-          devShell = warnToUpgrade devShells.default; # for compat with pre-2.7 flakes
         }
       );
 }
