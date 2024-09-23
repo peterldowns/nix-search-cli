@@ -1,5 +1,4 @@
 # nix-search-cli
-
 `nix-search` is a CLI client for [`search.nixos.org/packages`](https://search.nixos.org/packages).
 Use `nix-search` to find packages by name, description, installed programs, version, or other metadata. Requires an active internet connection to work.
 
@@ -10,8 +9,7 @@ Major features and benefits:
 * Each result is linked to the web interface (in supported terminals)
 * Results are compact and nicely colorized by default (in supported terminals)
 
-```console
-$ nix-search --help
+```bash
 search for packages via search.nixos.org
 
 Usage:
