@@ -105,4 +105,4 @@ func (q Query) Payload() ([]byte, error) {
 }
 
 // Dict is a convenience helper for constructing JSON queries to send to Elasticsearch.
-type Dict map[string]interface{}
+type Dict map[string]any
