@@ -184,13 +184,6 @@ nix shell # and then `nix-search`
 nix shell -c nix-search --help # directly run `nix-search` from inside this shell
 ```
 
-### Updating the gomod2nix file
-If you make changes that modify the golang dependencies, you'll need to update the pinned dependencies used in the Nix build process:
-
-```bash
-gomod2nix
-```
-
 ### Update the flake.lock:
 ```bash
 # Re-generate the flake.lock file
@@ -198,9 +191,3 @@ nix flake lock
 # Update all dependencies and update the flake.lock file
 nix flake update
 ```
-
-### TODOs
-- package godocs completed
-- package use documentation in README
-- shell completions in nix package and generatable
-- option searching
