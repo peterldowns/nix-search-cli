@@ -28,11 +28,6 @@ jobs:
           -H "Content-Type: application/octet-stream" \
           --data-binary @bin/nix-search-darwin-amd64 \
           "$upload_url?name=nix-search-darwin-amd64&label=nix-search-darwin-amd64"
-        bottle_name=$(./scripts/make-bottle.sh ./bin/nix-search-darwin-amd64 monterey)
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
-          -H "Content-Type: application/octet-stream" \
-          --data-binary @"${bottle_name}" \
-          "$upload_url?name=${bottle_name}&label=${bottle_name}"
     - name: release-darwin-arm64
       run: |
         ldflags=$(./scripts/golang-ldflags.sh)
@@ -42,11 +37,6 @@ jobs:
           -H "Content-Type: application/octet-stream" \
           --data-binary @bin/nix-search-darwin-arm64 \
           "$upload_url?name=nix-search-darwin-arm64&label=nix-search-darwin-arm64"
-        bottle_name=$(./scripts/make-bottle.sh ./bin/nix-search-darwin-arm64 arm64_monterey)
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
-          -H "Content-Type: application/octet-stream" \
-          --data-binary @"${bottle_name}" \
-          "$upload_url?name=${bottle_name}&label=${bottle_name}"
     - name: release-linux-arm64
       run: |
         ldflags=$(./scripts/golang-ldflags.sh)
@@ -56,11 +46,6 @@ jobs:
           -H "Content-Type: application/octet-stream" \
           --data-binary @bin/nix-search-linux-arm64 \
           "$upload_url?name=nix-search-linux-arm64&label=nix-search-linux-arm64"
-        bottle_name=$(./scripts/make-bottle.sh ./bin/nix-search-linux-arm64 arm64_linux)
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
-          -H "Content-Type: application/octet-stream" \
-          --data-binary @"${bottle_name}" \
-          "$upload_url?name=${bottle_name}&label=${bottle_name}"
     - name: release-linux-amd64
       run: |
         ldflags=$(./scripts/golang-ldflags.sh)
@@ -70,8 +55,3 @@ jobs:
           -H "Content-Type: application/octet-stream" \
           --data-binary @bin/nix-search-linux-amd64 \
           "$upload_url?name=nix-search-linux-amd64&label=nix-search-linux-amd64"
-        bottle_name=$(./scripts/make-bottle.sh ./bin/nix-search-linux-amd64 x86_64_linux)
-        curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
-          -H "Content-Type: application/octet-stream" \
-          --data-binary @"${bottle_name}" \
-          "$upload_url?name=${bottle_name}&label=${bottle_name}"
