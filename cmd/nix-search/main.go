@@ -14,10 +14,11 @@ import (
 )
 
 var rootCommand = &cobra.Command{
-	Use:   "nix-search ...query",
-	Short: "search for packages via search.nixos.org",
-	Example: trimLeading(`
-# Search
+	Use:   "nix-search some program or package [flags]",
+	Short: DocsLink,
+	Example: CLIExample(`
+# Search for nix packages in the https://search.nixos.org index
+
 # ... like the web interface
 nix-search python linter
 nix-search --search "python linter"  
@@ -33,12 +34,16 @@ nix-search --program "py*"
 # ... with ElasticSearch QueryString syntax
 nix-search --query-string="package_programs:(crystal OR irb)"
 nix-search --query-string='package_description:(MIT Scheme)'
-# ... on a specific channel
+# ... on a specific channel, default "unstable". The valid channel
+#     values are what the search.nixos.org index has, check
+#     that website to see what options they show in their interface.
 nix-search --channel=unstable python3
-# ... or flakes
+# ... or flakes indexed by search.nixos.org, see their website
+#     for more information.
 nix-search --flakes wayland
-# ... with multiple filters and options
-nix-search --name go --version 1.20 --details
+
+# ... or search with multiple filters and options
+nix-search golang --program go --version '1.*' --details
 	`),
 	TraverseChildren: true,
 	Args:             cobra.ArbitraryArgs,
@@ -89,8 +94,7 @@ func root(c *cobra.Command, args []string) error {
 	// If the user doesn't give any search terms or any flags, show the
 	// program's usage information and exit.
 	if query.IsEmpty() {
-		_ = c.Help()
-		return nil
+		return c.Help()
 	}
 
 	ctx := context.Background()
@@ -110,6 +114,10 @@ func root(c *cobra.Command, args []string) error {
 
 func main() {
 	rootCommand.CompletionOptions.DisableDefaultCmd = true // Disable the builtin shell-completion script generator command
+	rootCommand.SilenceErrors = true
+	rootCommand.SilenceUsage = true
+	rootCommand.TraverseChildren = true
+
 	rootFlags.Search = rootCommand.Flags().StringP("search", "s", "", "default search, same as the website")
 	rootFlags.Channel = rootCommand.Flags().StringP("channel", "c", "unstable", "which channel to search in")
 	rootFlags.Program = rootCommand.Flags().StringP("program", "p", "", "search by installed programs")
@@ -120,8 +128,6 @@ func main() {
 	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 20, "maximum number of results to return")
 	rootFlags.Version = rootCommand.Flags().StringP("version", "v", "", "search by version")
 	rootFlags.Flakes = rootCommand.Flags().BoolP("flakes", "f", false, "search flakes instead of nixpkgs")
-	rootCommand.SilenceErrors = true
-	rootCommand.SilenceUsage = true
 
 	defer func() {
 		switch r := recover().(type) {
