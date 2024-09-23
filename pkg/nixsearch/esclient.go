@@ -80,12 +80,12 @@ func newRequest(ctx context.Context, query Query) (*http.Request, error) {
 	} else {
 		index = ElasticSearchIndexPrefix + url.QueryEscape("nixos-"+query.Channel)
 	}
-	url := fmt.Sprintf(ElasticSearchURLTemplate, index)
+	eurl := fmt.Sprintf(ElasticSearchURLTemplate, index)
 	payload, err := query.Payload()
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, eurl, bytes.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
