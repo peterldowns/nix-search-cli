@@ -61,12 +61,8 @@ var rootFlags struct {
 func root(c *cobra.Command, args []string) error {
 	channel := *rootFlags.Channel
 	search := *rootFlags.Search
-	if len(args) != 0 {
-		if search != "" {
-			fmt.Printf("[warning]: arbitrary arguments are being ignored due to explicit --query\n")
-		} else {
-			search = strings.Join(args, " ")
-		}
+	if len(args) != 0 && search == "" {
+		search = strings.Join(args, " ")
 	}
 
 	query := nixsearch.Query{
