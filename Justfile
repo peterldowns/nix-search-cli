@@ -21,7 +21,25 @@ lint *args:
 
 # build ./bin/nix-search
 build:
-  go build -o bin/nix-search ./cmd/nix-search
+  #!/usr/bin/env bash
+  ldflags=$(./scripts/golang-ldflags.sh)
+  go build -ldflags "$ldflags" -o bin/nix-search ./cmd/nix-search
+
+# build ghcr.io/peterldowns/nix-search-cli:local
+#
+# run with
+#    docker run -it --rm ghcr.io/peterldowns/nix-search-cli:local
+build-docker:
+  #!/usr/bin/env bash
+  COMMIT_SHA=$(git rev-parse --short HEAD || echo "unknown")
+  VERSION=$(cat ./VERSION)
+  docker build \
+    --tag ghcr.io/peterldowns/nix-search-cli:local \
+    --build-arg COMMIT_SHA="$COMMIT_SHA" \
+    --build-arg VERSION="$VERSION" \
+    --file ./Dockerfile \
+    -o type=image \
+    .
 
 # builds and pushes peterldowns/nix-search-cli, tagged with :latest and :$COMMIT_SHA
 release-container:
