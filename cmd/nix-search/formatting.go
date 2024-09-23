@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -13,6 +14,10 @@ import (
 )
 
 func printResults(query nixsearch.Query, packages []nixsearch.Package) {
+	shouldReverseOrder := (rootFlags.Reverse != nil && *rootFlags.Reverse)
+	if shouldReverseOrder {
+		slices.Reverse(packages)
+	}
 	for _, pkg := range packages {
 		printResult(query, pkg)
 	}
