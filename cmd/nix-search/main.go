@@ -61,6 +61,7 @@ var rootFlags struct {
 	JSON        *bool
 	Details     *bool
 	MaxResults  *int
+	Reverse     *bool
 }
 
 func root(c *cobra.Command, args []string) error {
@@ -126,6 +127,7 @@ func main() {
 	rootFlags.JSON = rootCommand.Flags().BoolP("json", "j", false, "emit results in json-line format")
 	rootFlags.Details = rootCommand.Flags().BoolP("details", "d", false, "show expanded details for each result")
 	rootFlags.MaxResults = rootCommand.Flags().IntP("max-results", "m", 20, "maximum number of results to return")
+	rootFlags.Reverse = rootCommand.Flags().BoolP("reverse", "r", false, "print results in reverse order")
 	rootFlags.Version = rootCommand.Flags().StringP("version", "v", "", "search by version")
 	rootFlags.Flakes = rootCommand.Flags().BoolP("flakes", "f", false, "search flakes instead of nixpkgs")
 
