@@ -8,28 +8,44 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: setup-go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version: 1.22
           cache: true
           cache-dependency-path: go.sum
       - name: build
         run: go build -v ./...
       - name: test
-        run: go test ./...
+        run: go test -race ./...
   lint:
+    # https://github.com/golangci/golangci-lint-action?tab=readme-ov-file#annotations
+    permissions:
+      contents: read # read the repo
+      pull-requests: read # allows the 'only-new-issues' option to work
+      checks: write # annotate code in the PR
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: setup-go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.19
+          go-version: 1.22
           cache: true
           cache-dependency-path: go.sum
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v5
         with:
-          version: v1.50.1
+          install-mode: "binary"
+          version: "v1.57.1"
+          # https://github.com/golangci/golangci-lint-action/issues/244
+          # https://github.com/Kong/mesh-perf/pull/168
+          # https://github.com/golangci/golangci-lint-action/issues/552#issuecomment-1413509544
+          args: --timeout 10m
+          skip-cache: true
+      - name: go mod tidy
+        run: go mod tidy
+      - name: check for any changes
+        run: |
+          [[ $(git status --porcelain) == "" ]] || (echo "changes detected" && exit 1)
