@@ -10,34 +10,39 @@ Major features and benefits:
 * Results are compact and nicely colorized by default (in supported terminals)
 
 ```bash
-search for packages via search.nixos.org
+Docs: https://github.com/peterldowns/nix-search-cli
 
 Usage:
-  nix-search ...query [flags]
+  nix-search some program or package [flags]
 
 Examples:
-  # Search
+  # Search for nix packages in the https://search.nixos.org index
+  
   # ... like the web interface
   nix-search python linter
-  nix-search --search "python linter"
+  nix-search --search "python linter"  
   # ... by package name
   nix-search --name python
-  nix-search --name 'emacsPackages.*'
+  nix-search --name 'emacsPackages.*'  
   # ... by version
-  nix-search --version 1.20
-  nix-search --version '1.*'
+  nix-search --version 1.20 
+  nix-search --version '1.*'           
   # ... by installed programs
   nix-search --program python
   nix-search --program "py*"
   # ... with ElasticSearch QueryString syntax
   nix-search --query-string="package_programs:(crystal OR irb)"
   nix-search --query-string='package_description:(MIT Scheme)'
-  # ... on a specific channel
+  # ... on a specific channel, default "unstable". The valid channel
+  #     values are what the search.nixos.org index has, check
+  #     that website to see what options they show in their interface.
   nix-search --channel=unstable python3
-  # ... or flakes
+  # ... or flakes indexed by search.nixos.org, see their website
+  #     for more information.
   nix-search --flakes wayland
-  # ... with multiple filters and options
-  nix-search --name go --version 1.20 --details
+  
+  # ... or search with multiple filters and options
+  nix-search golang --program go --version '1.*' --details
 
 Flags:
   -c, --channel string        which channel to search in (default "unstable")
@@ -49,6 +54,7 @@ Flags:
   -n, --name string           search by package name
   -p, --program string        search by installed programs
   -q, --query-string string   search by elasticsearch querystring
+  -r, --reverse               print results in reverse order
   -s, --search string         default search, same as the website
   -v, --version string        search by version
 ```
