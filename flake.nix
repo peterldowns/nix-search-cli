@@ -62,8 +62,8 @@
               "cmd/nix-search"
             ];
             ldflags = [
-              "-X github.com/peterldowns/nix-search-cli/cmd/nix-search/Version=${version}"
-              "-X github.com/peterldowns/nix-search-cli/cmd/nix-search/Commit=${commit}"
+              "-X main.Version=${version}"
+              "-X main.Commit=${commit}"
             ];
 
             # Add any extra packages required to build the binaries should go here.
