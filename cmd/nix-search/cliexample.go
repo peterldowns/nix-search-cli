@@ -19,8 +19,20 @@ func CLIShort(s string) string {
 	return example(s, "")
 }
 
-var DocsLink = color.New(color.Faint).Sprint( //nolint:gochecknoglobals
-	"Docs: https://github.com/peterldowns/nix-search-cli",
+// These will be set at build time with ldflags, see Justfile for how they're
+// defined and passed.
+var (
+	Version = "unknown" //nolint:gochecknoglobals
+	Commit  = "unknown" //nolint:gochecknoglobals
+)
+
+func VersionString() string {
+	return fmt.Sprintf("%s+commit.%s", Version, Commit)
+}
+
+var DocsLink = color.New(color.Faint).Sprintf( //nolint:gochecknoglobals
+	`Docs: https://github.com/peterldowns/nix-search-cli
+Version: %s`, VersionString(),
 )
 
 func CLIHelp(s string) string {
