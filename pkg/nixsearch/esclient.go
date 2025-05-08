@@ -17,7 +17,11 @@ const (
 	// https://github.com/NixOS/nixos-search/blob/main/frontend/src/index.js
 	ElasticSearchUsername    = "aWVSALXpZv"
 	ElasticSearchPassword    = "X8gPHnzL52wFEekuxsfQ9cSh"
-	ElasticSearchURLTemplate = `https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/%s/_search`
+	ElasticSearchURLTemplate = `https://search.nixos.org/backend/%s/_search`
+	// The elasticsearch schema version (updated when new fields are indexed)
+	// Try to keep in sync with the value used by search.nixos.org front-end:
+	// https://github.com/NixOS/nixos-search/blob/main/VERSION
+	ElasticSearchSchemaVersion = "43"
 	// See the list of available indexes at
 	// https://nixos-search-7-1733963800.us-east-1.bonsaisearch.net:443/_aliases
 	// They're in the format "latest-<VERSION>-identifier", e.g.
@@ -30,7 +34,7 @@ const (
 	// they could easily) so we do the next best thing and use a wildcard prefix
 	// for the version number. Experimentally, results are the same as before,
 	// it doesn't matter that we're querying over multiple indices.
-	ElasticSearchIndexPrefix = "latest-*-"
+	ElasticSearchIndexPrefix = "latest-" + ElasticSearchSchemaVersion + "-"
 )
 
 type ElasticSearchClient struct {
