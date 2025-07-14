@@ -59,12 +59,16 @@ Flags:
   -v, --version string        search by version
 ```
 
-For example, here's how you would find all packages that install a `gcloud` binary. The results show the version of each package as well as the full set of installed binaries. In a supported terminal, we use nice colors:
+For example, here's how you would find all the right package to install `gcloud`, and then
+install that package. The results show the version of each package as well as the full set of
+installed binaries. In a supported terminal, we use nice colors:
 
 ```console
-$ ./bin/nix-search -p gcloud
+$ nix-search -p gcloud
 google-cloud-sdk-gce @ 408.0.1: gcloud bq docker-credential-gcloud git-credential-gcloud.sh gsutil
 google-cloud-sdk @ 408.0.1: gcloud bq docker-credential-gcloud git-credential-gcloud.sh gsutil
+
+$ nix profile install nixpkgs#google-cloud-sdk
 ```
 
 Here's how you would find out how to install python 3.12:

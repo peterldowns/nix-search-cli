@@ -61,3 +61,28 @@ type Package struct {
 func (p Package) IsFlake() bool {
 	return p.FlakeResolved.Type != ""
 }
+
+// ID returns a unique identifier for this package: the attrname if it's a
+// regular package, or the flake reference if it's a flake.
+//
+// Different versions of the same package will have the same ID; this method
+// exists to help deduplicate
+func (p Package) ID() string {
+	if p.IsFlake() {
+		switch p.FlakeResolved.Type {
+		case "github":
+			return fmt.Sprintf(
+				"%s:%s/%s#%s",
+				p.FlakeResolved.Type,
+				p.FlakeResolved.Owner,
+				p.FlakeResolved.Repo,
+				p.AttrName,
+			)
+		case "git":
+			return fmt.Sprintf("%s#%s", p.FlakeResolved.URL, p.AttrName)
+		default:
+			return "unknown:" + p.FlakeName
+		}
+	}
+	return p.AttrName
+}
