@@ -77,30 +77,15 @@ func printResult(query nixsearch.Query, pkg nixsearch.Package) {
 
 func formatName(query nixsearch.Query, pkg nixsearch.Package) string {
 	if pkg.IsFlake() {
-		var name string
-		switch pkg.FlakeResolved.Type {
-		case "github":
-			name = fmt.Sprintf(
-				"%s:%s/%s#%s",
-				pkg.FlakeResolved.Type,
-				pkg.FlakeResolved.Owner,
-				pkg.FlakeResolved.Repo,
-				pkg.AttrName,
-			)
-		case "git":
-			name = fmt.Sprintf("%s#%s", pkg.FlakeResolved.URL, pkg.AttrName)
-		default:
-			name = "unknown:" + pkg.FlakeName
-		}
 		url := fmt.Sprintf(
 			`https://search.nixos.org/flakes?show=%s&query=%s`,
 			pkg.AttrName,
 			pkg.AttrName,
 		)
-		return formatLink(url, name, color.Underline, color.FgWhite)
+		return formatLink(url, pkg.ID(), color.Underline, color.FgWhite)
 	}
 	url := fmt.Sprintf(`https://search.nixos.org/packages?channel=%s&show=%s`, query.Channel, pkg.AttrName)
-	return formatLink(url, pkg.AttrName)
+	return formatLink(url, pkg.ID())
 }
 
 func formatVersion(version string) string {

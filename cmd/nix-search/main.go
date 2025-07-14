@@ -108,6 +108,7 @@ func root(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	packages = nixsearch.Deduplicate(packages)
 
 	printResults(query, packages)
 	return nil
