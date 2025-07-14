@@ -65,23 +65,24 @@ func (p Package) IsFlake() bool {
 // ID returns a unique identifier for this package: the attrname if it's a
 // regular package, or the flake reference if it's a flake.
 //
-// Different versions of the same package will have the same ID.
-func (pkg Package) ID() string {
-	if pkg.IsFlake() {
-		switch pkg.FlakeResolved.Type {
+// Different versions of the same package will have the same ID; this method
+// exists to help deduplicate
+func (p Package) ID() string {
+	if p.IsFlake() {
+		switch p.FlakeResolved.Type {
 		case "github":
 			return fmt.Sprintf(
 				"%s:%s/%s#%s",
-				pkg.FlakeResolved.Type,
-				pkg.FlakeResolved.Owner,
-				pkg.FlakeResolved.Repo,
-				pkg.AttrName,
+				p.FlakeResolved.Type,
+				p.FlakeResolved.Owner,
+				p.FlakeResolved.Repo,
+				p.AttrName,
 			)
 		case "git":
-			return fmt.Sprintf("%s#%s", pkg.FlakeResolved.URL, pkg.AttrName)
+			return fmt.Sprintf("%s#%s", p.FlakeResolved.URL, p.AttrName)
 		default:
-			return "unknown:" + pkg.FlakeName
+			return "unknown:" + p.FlakeName
 		}
 	}
-	return pkg.AttrName
+	return p.AttrName
 }

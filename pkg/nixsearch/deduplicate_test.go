@@ -65,6 +65,8 @@ func TestDeduplicateFlakes(t *testing.T) {
 }
 
 func TestDeduplicateFlakeAttrnames(t *testing.T) {
+	t.Parallel()
+
 	pkgFlake := Package{
 		AttrName:  "nix-search",
 		Version:   "0.0.1", // fake
