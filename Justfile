@@ -8,8 +8,8 @@
 set positional-arguments
 
 # print all available commands by default
-default:
-  just --list
+help:
+  @just --list
 
 # run the test suite
 test *args='./...':
